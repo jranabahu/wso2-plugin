@@ -1,4 +1,4 @@
-3Scale Integration Plugin
+WSO2 Integration Plugin
 -----------------------------
 
 

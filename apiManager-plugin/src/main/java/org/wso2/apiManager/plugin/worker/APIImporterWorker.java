@@ -87,7 +87,7 @@ public class APIImporterWorker implements Worker{
         }
 
         if (errors.length() > 0) {
-            errors += "\nPlease contact 3scale support for assistance";
+            errors += "\nPlease contact WSO2 support for assistance";
         }
 
         return null;
