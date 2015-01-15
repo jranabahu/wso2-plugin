@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="Maven: com.smartbear:soapui-swagger-plugin:2.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/smartbear/soapui-swagger-plugin/2.0/soapui-swagger-plugin-2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/smartbear/soapui-swagger-plugin/2.0/soapui-swagger-plugin-2.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/smartbear/soapui-swagger-plugin/2.0/soapui-swagger-plugin-2.0-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../../../other/readyAPI/soapui-swagger-plugin/src/main/groovy" />
+      <root url="file://$PROJECT_DIR$/../../../other/readyAPI/soapui-swagger-plugin/target/generated-sources/groovy-stubs/main" />
+      <root url="file://$PROJECT_DIR$/../../../other/readyAPI/soapui-swagger-plugin/target/generated-sources/groovy-stubs/test" />
+    </SOURCES>
+  </library>
+</component>
