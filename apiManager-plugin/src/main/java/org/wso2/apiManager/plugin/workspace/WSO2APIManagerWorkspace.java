@@ -66,8 +66,6 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
                     return new ValidationMessage[]{new ValidationMessage("Please enter the API Store URL.", dialog
                             .getFormField(ProjectModel.API_STORE_URL))};
                 }
-
-                // TODO: check and remove or move
                 if (StringUtils.isNullOrEmpty(dialog.getValue(ProjectModel.PROJECT_NAME))) {
                     return new ValidationMessage[]{new ValidationMessage("Please enter project name.", dialog
                             .getFormField(ProjectModel.PROJECT_NAME))};

@@ -3,9 +3,13 @@ package org.wso2.apiManager.plugin.workspace;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.plugins.ActionConfiguration;
+import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.UISupport;
 import com.eviware.soapui.support.action.support.AbstractSoapUIAction;
+import com.eviware.x.form.ValidationMessage;
 import com.eviware.x.form.XFormDialog;
+import com.eviware.x.form.XFormField;
+import com.eviware.x.form.XFormFieldValidator;
 import com.eviware.x.form.support.ADialogBuilder;
 import org.wso2.apiManager.plugin.ActionGroups;
 import org.wso2.apiManager.plugin.Utils;
@@ -32,6 +36,28 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
         APIListExtractionResult listExtractionResult = null;
         if (dialog == null) {
             dialog = ADialogBuilder.buildDialog(ImportModel.class);
+            dialog.getFormField(ImportModel.API_STORE_URL).addFormFieldValidator(new XFormFieldValidator() {
+                @Override
+                public ValidationMessage[] validateField(XFormField formField) {
+                    if (StringUtils.isNullOrEmpty(dialog.getValue(ImportModel.API_STORE_URL))) {
+                        return new ValidationMessage[]{new ValidationMessage("Please enter the API Store URL.", dialog
+                                .getFormField(ImportModel.API_STORE_URL))};
+                    }
+                    if (StringUtils.isNullOrEmpty(dialog.getValue(ImportModel.USER_NAME))) {
+                        return new ValidationMessage[]{new ValidationMessage("Please enter user name.", dialog
+                                .getFormField(ImportModel.USER_NAME))};
+                    }
+                    if (StringUtils.isNullOrEmpty(dialog.getValue(ImportModel.PASSWORD))) {
+                        return new ValidationMessage[]{new ValidationMessage("Please enter an valid password.", dialog
+                                .getFormField(ImportModel.PASSWORD))};
+                    }
+                    URL storeUrl = Utils.validateURL(formField.getValue());
+                    if (storeUrl == null) {
+                        return new ValidationMessage[]{new ValidationMessage("Invalid API Store URL.", formField)};
+                    }
+                    return new ValidationMessage[0];
+                }
+            });
         }
         while (dialog.show()) {
             String urlString = dialog.getValue(ImportModel.API_STORE_URL);

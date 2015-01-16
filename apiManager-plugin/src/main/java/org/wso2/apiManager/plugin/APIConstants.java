@@ -22,9 +22,7 @@ import javax.xml.namespace.QName;
 
 public final class APIConstants {
     public static final String API_ACTION = "action";
-    public static final String API_GET_ACTION = "getAPI";
     public static final String API_LOGIN_ACTION = "login";
-    public static final String API_LOGOUT_ACTION = "logout";
     public static final String APISTORE_LOGIN_USERNAME = "username";
     public static final String APISTORE_LOGIN_PASSWORD = "password";
     public static final String APISTORE_LOGIN_URL = "/site/blocks/user/login/ajax/login.jag";

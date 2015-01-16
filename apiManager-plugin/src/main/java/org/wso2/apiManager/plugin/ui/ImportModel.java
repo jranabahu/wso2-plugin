@@ -26,7 +26,7 @@ import com.eviware.x.form.support.AForm;
  */
 @AForm(name = "Create Project From API Specification on WSO2 API Store",
         description = "Creates a new Project from API specification on WSO2 API Store in this workspace")
-public class ImportModel {
+public interface ImportModel {
     @AField(name = "API Store URL",
             description = "API Store URL (i.e. https://192.168.122.1:9443/store/)",
             type = AField.AFieldType.STRING)

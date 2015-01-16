@@ -23,19 +23,7 @@ import com.eviware.x.form.support.AForm;
 
 @AForm(name = "Select API to Import",
         description = "Please select from the list which API specification(s) you want to import to the project.")
-public class APIModel {
-/*    @AField(description = "API Name", type = AField.AFieldType.COMPONENT)
-    public final static String NAME = "Name";
-
-    @AField(description = "API Version", type = AField.AFieldType.LABEL)
-    public final static String VERSION = "Version";
-
-    @AField(description = "API Provider", type = AField.AFieldType.LABEL)
-    public final static String PROVIDER = "Provider";
-
-    @AField(description = "API Description", type = AField.AFieldType.INFORMATION)
-    public final static String DESCRIPTION = "Description";*/
-
+public interface APIModel {
     @AField(description = "", type = AField.AFieldType.COMPONENT)
     public static final String API_INFO = "";
 
