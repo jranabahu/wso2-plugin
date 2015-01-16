@@ -19,9 +19,11 @@
 package org.wso2.apiManager.plugin;
 
 import com.eviware.soapui.SoapUI;
+import com.eviware.soapui.impl.rest.RestRequest;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.support.StringUtils;
+import com.eviware.soapui.support.types.StringToStringMap;
 import com.eviware.x.form.XFormDialog;
 import com.eviware.x.form.support.ADialogBuilder;
 import com.smartbear.swagger.SwaggerImporter;
@@ -138,5 +140,11 @@ public class Utils {
             convertedData[i][3] = apiInfo.getDescription();
         }
         return convertedData;
+    }
+
+    public static void setAuthorizationHeader(RestRequest restRequest) {
+        StringToStringMap map = new StringToStringMap(1);
+        map.putIfMissing("Authorization","Bearer <MY_ACCESS_TOKEN>");
+        restRequest.setRequestHeaders(map);
     }
 }

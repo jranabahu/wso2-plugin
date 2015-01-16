@@ -88,9 +88,7 @@ public class APIImporterWorker implements Worker {
                             for (RestMethod method : methods) {
                                 List<RestRequest> restRequests = method.getRequestList();
                                 for (RestRequest restRequest : restRequests) {
-                                    StringToStringMap map = new StringToStringMap(1);
-                                    map.putIfMissing("Authorization","Bearer <MY_ACCESS_TOKEN>");
-                                    restRequest.setRequestHeaders(map);
+                                    Utils.setAuthorizationHeader(restRequest);
                                 }
                             }
                         }
