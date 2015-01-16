@@ -26,7 +26,7 @@ import com.eviware.x.form.support.AForm;
  */
 @AForm(name = "Create Project From API Specification on WSO2 API Store",
         description = "Creates a new Project from API specification on WSO2 API Store in this workspace")
-public class ProjectForm {
+public class ProjectModel {
     @AField(name = "Project Name", description = "Name of the project", type = AField.AFieldType.STRING)
     public final static String PROJECT_NAME = "Project Name";
 

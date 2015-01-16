@@ -19,10 +19,15 @@
 package org.wso2.apiManager.plugin.worker;
 
 import com.eviware.soapui.SoapUI;
+import com.eviware.soapui.impl.rest.RestMethod;
+import com.eviware.soapui.impl.rest.RestRequest;
+import com.eviware.soapui.impl.rest.RestResource;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
+import com.eviware.soapui.model.iface.Request;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.UISupport;
+import com.eviware.soapui.support.types.StringToStringMap;
 import com.eviware.x.dialogs.Worker;
 import com.eviware.x.dialogs.XProgressDialog;
 import com.eviware.x.dialogs.XProgressMonitor;
@@ -33,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class APIImporterWorker implements Worker{
+public class APIImporterWorker implements Worker {
     private XProgressDialog waitDialog;
     private boolean cancelled = false;
     private List<APIInfo> links;
@@ -49,8 +54,10 @@ public class APIImporterWorker implements Worker{
     }
 
     public static List<RestService> importServices(List<APIInfo> links, WsdlProject project) {
-        APIImporterWorker worker = new APIImporterWorker(UISupport.getDialogs().createProgressDialog("Importing APIs...", 100,
-                                                                                         "", true), links, project);
+        APIImporterWorker worker = new APIImporterWorker(UISupport.getDialogs().createProgressDialog("Importing APIs." +
+                                                                                                     "..", 100, "",
+                                                                                                     true), links,
+                                                         project);
         try {
             worker.waitDialog.run(worker);
         } catch (Exception e) {
@@ -73,6 +80,22 @@ public class APIImporterWorker implements Worker{
             RestService[] service;
             try {
                 service = Utils.importAPItoProject(link, project);
+                if (service != null) {
+                    for (RestService restService : service) {
+                        List<RestResource> resources = restService.getAllResources();
+                        for (RestResource resource : resources) {
+                            List<RestMethod> methods = resource.getRestMethodList();
+                            for (RestMethod method : methods) {
+                                List<RestRequest> restRequests = method.getRequestList();
+                                for (RestRequest restRequest : restRequests) {
+                                    StringToStringMap map = new StringToStringMap(1);
+                                    map.putIfMissing("Authorization","Bearer <MY_ACCESS_TOKEN>");
+                                    restRequest.setRequestHeaders(map);
+                                }
+                            }
+                        }
+                    }
+                }
             } catch (Throwable e) {
 
                 if (errors.length() > 0) {

@@ -30,7 +30,7 @@ import com.eviware.x.form.support.ADialogBuilder;
 import com.smartbear.swagger.SwaggerImporter;
 import com.smartbear.swagger.SwaggerUtils;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
-import org.wso2.apiManager.plugin.ui.SelectedAPI;
+import org.wso2.apiManager.plugin.ui.APIModel;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -64,7 +64,7 @@ public class Utils {
     }
 
     public static List<APIInfo> showSelectAPIDefDialog(final List<APIInfo> apis){
-        final XFormDialog dialog = ADialogBuilder.buildDialog(SelectedAPI.class);
+        final XFormDialog dialog = ADialogBuilder.buildDialog(APIModel.class);
         ListModel<String> listBoxModel = new AbstractListModel<String>() {
             @Override
             public int getSize() {
@@ -77,12 +77,12 @@ public class Utils {
             }
         };
         final JList apiListBox = new JList(listBoxModel);
-        dialog.getFormField(SelectedAPI.NAME).setProperty("component", new JScrollPane(apiListBox));
-        dialog.getFormField(SelectedAPI.NAME).setProperty("preferredSize", new Dimension(500, 150));
-        dialog.setValue(SelectedAPI.VERSION, null);
-        dialog.setValue(SelectedAPI.PROVIDER, null);
-        dialog.getFormField(SelectedAPI.DESCRIPTION).setProperty("preferredSize", new Dimension(500, 150));
-        dialog.setValue(SelectedAPI.DESCRIPTION, null);
+        dialog.getFormField(APIModel.NAME).setProperty("component", new JScrollPane(apiListBox));
+        dialog.getFormField(APIModel.NAME).setProperty("preferredSize", new Dimension(500, 150));
+        dialog.setValue(APIModel.VERSION, null);
+        dialog.setValue(APIModel.PROVIDER, null);
+        dialog.getFormField(APIModel.DESCRIPTION).setProperty("preferredSize", new Dimension(500, 150));
+        dialog.setValue(APIModel.DESCRIPTION, null);
 
         apiListBox.addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -90,20 +90,20 @@ public class Utils {
                 int[] selected = apiListBox.getSelectedIndices();
                 if(selected != null && selected.length == 1) {
                     int selectedNo = selected[0];
-                    dialog.getFormField(SelectedAPI.VERSION).setValue(apis.get(selectedNo).getVersion());
-                    dialog.getFormField(SelectedAPI.PROVIDER).setValue(apis.get(selectedNo).getProvider());
-                    dialog.getFormField(SelectedAPI.DESCRIPTION).setValue(apis.get(selectedNo).getDescription());
+                    dialog.getFormField(APIModel.VERSION).setValue(apis.get(selectedNo).getVersion());
+                    dialog.getFormField(APIModel.PROVIDER).setValue(apis.get(selectedNo).getProvider());
+                    dialog.getFormField(APIModel.DESCRIPTION).setValue(apis.get(selectedNo).getDescription());
                 }
                 else{
-                    dialog.getFormField(SelectedAPI.VERSION).setValue(null);
-                    dialog.getFormField(SelectedAPI.PROVIDER).setValue(null);
-                    dialog.getFormField(SelectedAPI.DESCRIPTION).setValue(null);
+                    dialog.getFormField(APIModel.VERSION).setValue(null);
+                    dialog.getFormField(APIModel.PROVIDER).setValue(null);
+                    dialog.getFormField(APIModel.DESCRIPTION).setValue(null);
                 }
             }
         });
         apiListBox.setSelectedIndex(-1);
 
-        dialog.getFormField(SelectedAPI.NAME).addFormFieldValidator(new XFormFieldValidator() {
+        dialog.getFormField(APIModel.NAME).addFormFieldValidator(new XFormFieldValidator() {
             @Override
             public ValidationMessage[] validateField(XFormField formField) {
                 int[] selected = apiListBox.getSelectedIndices();
