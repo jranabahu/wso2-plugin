@@ -22,10 +22,7 @@ import com.eviware.soapui.SoapUI;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.support.StringUtils;
-import com.eviware.x.form.ValidationMessage;
 import com.eviware.x.form.XFormDialog;
-import com.eviware.x.form.XFormField;
-import com.eviware.x.form.XFormFieldValidator;
 import com.eviware.x.form.support.ADialogBuilder;
 import com.smartbear.swagger.SwaggerImporter;
 import com.smartbear.swagger.SwaggerUtils;
@@ -33,8 +30,8 @@ import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 import org.wso2.apiManager.plugin.ui.APIModel;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -45,27 +42,67 @@ public class Utils {
     /*
     * This method checks whether the given URL is a correct one.
     * */
-    public static URL validateURL(String urlString){
-        if(StringUtils.isNullOrEmpty(urlString)){
+    public static URL validateURL(String urlString) {
+        if (StringUtils.isNullOrEmpty(urlString)) {
             return null;
         }
 
-        if( !urlString.toLowerCase().startsWith( "http://") && !urlString.toLowerCase().startsWith("https://")){
+        if (!urlString.toLowerCase().startsWith("http://") && !urlString.toLowerCase().startsWith("https://")) {
             return null;
         }
 
         try {
             return new URL(urlString);
-        }
-        catch (MalformedURLException e){
+        } catch (MalformedURLException e) {
             SoapUI.logError(e);
             return null;
         }
     }
 
-    public static List<APIInfo> showSelectAPIDefDialog(final List<APIInfo> apis){
+    public static List<APIInfo> showSelectAPIDefDialog(final List<APIInfo> apis) {
         final XFormDialog dialog = ADialogBuilder.buildDialog(APIModel.class);
-        ListModel<String> listBoxModel = new AbstractListModel<String>() {
+        final Object[][] tableData = convertToTableData(apis);
+        final String[] columnNames = {"Name", "Version", "Provider", "Description"};
+
+        TableModel tableModel = new AbstractTableModel() {
+            @Override
+            public int getRowCount() {
+                return tableData.length;
+            }
+
+            @Override
+            public int getColumnCount() {
+                // We have a hardcoded set of columns
+                return 4;
+            }
+
+            @Override
+            public Object getValueAt(int rowIndex, int columnIndex) {
+                return tableData[rowIndex][columnIndex];
+            }
+
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return false;
+            }
+        };
+
+
+        JTable apiTable = new JTable(tableData, columnNames);
+        apiTable.setCellSelectionEnabled(false);
+        apiTable.setColumnSelectionAllowed(false);
+        apiTable.setRowSelectionAllowed(true);
+        apiTable.setPreferredScrollableViewportSize(new Dimension(500,200));
+
+        JScrollPane scrollPane = new JScrollPane(apiTable);
+        scrollPane.setPreferredSize(new Dimension(500,200));
+
+        dialog.setFormFieldProperty("component", scrollPane);
+        dialog.setFormFieldProperty("preferredSize", new Dimension(500,200));
+//        dialog.setFormFieldProperty("preferredSize", new Dimension(500, 250));
+
+
+        /*ListModel<String> listBoxModel = new AbstractListModel<String>() {
             @Override
             public int getSize() {
                 return apis.size();
@@ -75,8 +112,8 @@ public class Utils {
             public String getElementAt(int index) {
                 return apis.get(index).getName();
             }
-        };
-        final JList apiListBox = new JList(listBoxModel);
+        };*/
+        /*final JList apiListBox = new JList(listBoxModel);
         dialog.getFormField(APIModel.NAME).setProperty("component", new JScrollPane(apiListBox));
         dialog.getFormField(APIModel.NAME).setProperty("preferredSize", new Dimension(500, 150));
         dialog.setValue(APIModel.VERSION, null);
@@ -88,13 +125,12 @@ public class Utils {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 int[] selected = apiListBox.getSelectedIndices();
-                if(selected != null && selected.length == 1) {
+                if (selected != null && selected.length == 1) {
                     int selectedNo = selected[0];
                     dialog.getFormField(APIModel.VERSION).setValue(apis.get(selectedNo).getVersion());
                     dialog.getFormField(APIModel.PROVIDER).setValue(apis.get(selectedNo).getProvider());
                     dialog.getFormField(APIModel.DESCRIPTION).setValue(apis.get(selectedNo).getDescription());
-                }
-                else{
+                } else {
                     dialog.getFormField(APIModel.VERSION).setValue(null);
                     dialog.getFormField(APIModel.PROVIDER).setValue(null);
                     dialog.getFormField(APIModel.DESCRIPTION).setValue(null);
@@ -107,32 +143,45 @@ public class Utils {
             @Override
             public ValidationMessage[] validateField(XFormField formField) {
                 int[] selected = apiListBox.getSelectedIndices();
-                if(selected == null || selected.length == 0){
-                    return new ValidationMessage[]{
-                            new ValidationMessage("Please select at least one API specification to add.", formField)};
-                } else{
+                if (selected == null || selected.length == 0) {
+                    return new ValidationMessage[]{new ValidationMessage("Please select at least one API " +
+                                                                         "specification to add.", formField)};
+                } else {
                     return new ValidationMessage[0];
                 }
             }
         });
-
-        if(dialog.show()) {
-            int[] selected = apiListBox.getSelectedIndices();
+*/
+        if (dialog.show()) {
+            int[] selected = apiTable.getSelectedRows();
             ArrayList<APIInfo> selectedAPIs = new ArrayList<APIInfo>();
             for (int no : selected) {
                 selectedAPIs.add(apis.get(no));
             }
             return selectedAPIs;
-        }
-        else{
+        } else {
             return null;
         }
 
     }
 
-    public static RestService[] importAPItoProject(APIInfo apiLink,  WsdlProject project){
+    public static RestService[] importAPItoProject(APIInfo apiLink, WsdlProject project) {
         SwaggerImporter importer = SwaggerUtils.createSwaggerImporter(apiLink.getSwaggerDocLink(), project);
         SoapUI.log("Importing Swagger from [" + apiLink.getName() + "]");
         return importer.importSwagger(apiLink.getSwaggerDocLink());
+    }
+
+    private static Object[][] convertToTableData(List<APIInfo> apiList) {
+        Object[][] convertedData = new Object[apiList.size()][4];
+
+        for (int i = 0; i < apiList.size(); i++) {
+            APIInfo apiInfo = apiList.get(i);
+
+            convertedData[i][0] = apiInfo.getName();
+            convertedData[i][1] = apiInfo.getVersion();
+            convertedData[i][2] = apiInfo.getProvider();
+            convertedData[i][3] = apiInfo.getDescription();
+        }
+        return convertedData;
     }
 }
