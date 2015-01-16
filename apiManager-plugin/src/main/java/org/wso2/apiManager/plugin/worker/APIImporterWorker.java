@@ -73,13 +73,13 @@ public class APIImporterWorker implements Worker {
 
     @Override
     public Object construct(XProgressMonitor monitor) {
-        for (APIInfo link : links) {
+        for (APIInfo apiInfo : links) {
             if (cancelled) {
                 break;
             }
             RestService[] service;
             try {
-                service = Utils.importAPItoProject(link, project);
+                service = Utils.importAPItoProject(apiInfo, project);
                 if (service != null) {
                     for (RestService restService : service) {
                         List<RestResource> resources = restService.getAllResources();
@@ -94,6 +94,8 @@ public class APIImporterWorker implements Worker {
                                 }
                             }
                         }
+                        // We change the service name to the apiName/apiVersion
+                        restService.setName(constructServiceName(apiInfo, restService.getName()));
                     }
                 }
             } catch (Throwable e) {
@@ -102,11 +104,13 @@ public class APIImporterWorker implements Worker {
                     errors += "\n";
                 }
 
-                errors = String.format("Failed to read API description for[%s] - [%s]", link.getName(), e.getMessage());
+                errors = String.format("Failed to read API description for[%s] - [%s]", apiInfo.getName(), e.getMessage());
                 SoapUI.logError(e);
                 continue;
             }
-            addedServices.addAll(Arrays.asList(service));
+            if (service != null) {
+                addedServices.addAll(Arrays.asList(service));
+            }
         }
 
         if (errors.length() > 0) {
@@ -132,5 +136,9 @@ public class APIImporterWorker implements Worker {
         cancelled = true;
         waitDialog.setVisible(false);
         return true;
+    }
+
+    private String constructServiceName(APIInfo apiInfo, String resourceName){
+        return apiInfo.getName() + "/" + apiInfo.getVersion() + resourceName;
     }
 }

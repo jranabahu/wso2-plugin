@@ -61,37 +61,44 @@ public class Utils {
 
     public static List<APIInfo> showSelectAPIDefDialog(final List<APIInfo> apis) {
         final XFormDialog dialog = ADialogBuilder.buildDialog(APIModel.class);
-        final Object[][] tableData = convertToTableData(apis);
-        final String[] columnNames = {"Name", "Version", "Provider", "Description"};
 
         TableModel tableModel = new AbstractTableModel() {
+            Object[][] data = convertToTableData(apis);
+            String[] columnNames = {"Name", "Version", "Provider", "Description"};
+
             @Override
             public int getRowCount() {
-                return tableData.length;
+                return data.length;
             }
 
             @Override
             public int getColumnCount() {
                 // We have a hardcoded set of columns
-                return 4;
+                return columnNames.length;
             }
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
-                return tableData[rowIndex][columnIndex];
+                return data[rowIndex][columnIndex];
             }
 
             @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return false;
             }
+
+            @Override
+            public String getColumnName(int column) {
+                return columnNames[column];
+            }
         };
 
 
-        JTable apiTable = new JTable(tableData, columnNames);
+        JTable apiTable = new JTable(tableModel);
         apiTable.setCellSelectionEnabled(false);
         apiTable.setColumnSelectionAllowed(false);
         apiTable.setRowSelectionAllowed(true);
+        apiTable.setFillsViewportHeight(true);
         apiTable.setPreferredScrollableViewportSize(new Dimension(500,200));
 
         JScrollPane scrollPane = new JScrollPane(apiTable);
@@ -99,59 +106,7 @@ public class Utils {
 
         dialog.setFormFieldProperty("component", scrollPane);
         dialog.setFormFieldProperty("preferredSize", new Dimension(500,200));
-//        dialog.setFormFieldProperty("preferredSize", new Dimension(500, 250));
 
-
-        /*ListModel<String> listBoxModel = new AbstractListModel<String>() {
-            @Override
-            public int getSize() {
-                return apis.size();
-            }
-
-            @Override
-            public String getElementAt(int index) {
-                return apis.get(index).getName();
-            }
-        };*/
-        /*final JList apiListBox = new JList(listBoxModel);
-        dialog.getFormField(APIModel.NAME).setProperty("component", new JScrollPane(apiListBox));
-        dialog.getFormField(APIModel.NAME).setProperty("preferredSize", new Dimension(500, 150));
-        dialog.setValue(APIModel.VERSION, null);
-        dialog.setValue(APIModel.PROVIDER, null);
-        dialog.getFormField(APIModel.DESCRIPTION).setProperty("preferredSize", new Dimension(500, 150));
-        dialog.setValue(APIModel.DESCRIPTION, null);
-
-        apiListBox.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int[] selected = apiListBox.getSelectedIndices();
-                if (selected != null && selected.length == 1) {
-                    int selectedNo = selected[0];
-                    dialog.getFormField(APIModel.VERSION).setValue(apis.get(selectedNo).getVersion());
-                    dialog.getFormField(APIModel.PROVIDER).setValue(apis.get(selectedNo).getProvider());
-                    dialog.getFormField(APIModel.DESCRIPTION).setValue(apis.get(selectedNo).getDescription());
-                } else {
-                    dialog.getFormField(APIModel.VERSION).setValue(null);
-                    dialog.getFormField(APIModel.PROVIDER).setValue(null);
-                    dialog.getFormField(APIModel.DESCRIPTION).setValue(null);
-                }
-            }
-        });
-        apiListBox.setSelectedIndex(-1);
-
-        dialog.getFormField(APIModel.NAME).addFormFieldValidator(new XFormFieldValidator() {
-            @Override
-            public ValidationMessage[] validateField(XFormField formField) {
-                int[] selected = apiListBox.getSelectedIndices();
-                if (selected == null || selected.length == 0) {
-                    return new ValidationMessage[]{new ValidationMessage("Please select at least one API " +
-                                                                         "specification to add.", formField)};
-                } else {
-                    return new ValidationMessage[0];
-                }
-            }
-        });
-*/
         if (dialog.show()) {
             int[] selected = apiTable.getSelectedRows();
             ArrayList<APIInfo> selectedAPIs = new ArrayList<APIInfo>();
