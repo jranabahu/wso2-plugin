@@ -18,6 +18,7 @@
 
 package org.wso2.apiManager.plugin.client;
 
+import com.eviware.soapui.SoapUI;
 import com.eviware.soapui.support.StringUtils;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -40,6 +41,8 @@ import org.apache.http.util.EntityUtils;
 import org.wso2.apiManager.plugin.APIConstants;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -171,9 +174,18 @@ public class APIManagerClient {
         return baseUrl + APIConstants.APISTORE_API_LIST_URL;
     }
 
-    private String getSwaggerDocLink(String baseUrl, String apiName, String apiVersion, String apiProvider){
+    private String getSwaggerDocLink(String baseUrl, String apiName, String apiVersion, String apiProvider)
+            throws Exception{
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
+        }
+        if (apiProvider.contains("@")) {
+            try {
+                apiProvider = URLEncoder.encode(apiProvider, "utf-8");
+            } catch (UnsupportedEncodingException e) {
+                SoapUI.log("Error while generating the api-docs URL " + e.getMessage());
+                throw e;
+            }
         }
         return baseUrl + "/api-docs/" + apiProvider + "/" + apiName + "/" + apiVersion;
     }
