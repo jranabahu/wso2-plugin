@@ -22,8 +22,9 @@ import com.eviware.soapui.SoapUI
 
 class Properties {
     public static void setSystemProperties(){
-        String keyStoreFileName = SoapUI.getSettings().getString("SSLSettings@keyStore", null);
-        String keyStorePassword = SoapUI.getSettings().getString("SSLSettings@keyStorePassword", null);
+        String keyStoreFileName = "/home/janaka/work/wso2/apim/cluster/wso2am-1.8" +
+                                  ".0/repository/resources/security/client-truststore.jks";
+        String keyStorePassword = "wso2carbon";
 
         System.setProperty("javax.net.ssl.trustStore",keyStoreFileName);
         System.setProperty("javax.net.ssl.trustStorePassword", keyStorePassword);

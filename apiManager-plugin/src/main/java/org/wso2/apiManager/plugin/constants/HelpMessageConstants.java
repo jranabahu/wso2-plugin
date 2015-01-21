@@ -18,8 +18,10 @@
 
 package org.wso2.apiManager.plugin.constants;
 
+/**
+ * This class contains all the help/validation messages that are used by the UIs
+ */
 public class HelpMessageConstants {
-
     public static final String API_STORE_URL_VALIDATION_MSG = "Please enter the API Store URL.";
     public static final String USER_NAME_VALIDATION_MSG = "Please enter user name.";
     public static final String PASSWORD_VALIDATION_MSG = "Please enter an valid password.";

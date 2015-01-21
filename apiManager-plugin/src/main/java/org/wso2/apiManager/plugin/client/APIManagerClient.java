@@ -46,7 +46,7 @@ import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -56,7 +56,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -79,73 +78,34 @@ public class APIManagerClient {
         return apiManagerClient;
     }
 
-    private boolean authenticate(String storeEndpoint, String userName, char[] password) throws Exception {
-        // create a post request to addAPI.
-        HttpClient httpClient = getHttpClient();
-
-        HttpPost httppost = new HttpPost(getAPIStoreLoginUrl(storeEndpoint));
-        // Request parameters and other properties.
-        List<NameValuePair> params = new ArrayList<NameValuePair>(3);
-
-        params.add(new BasicNameValuePair(APIConstants.API_ACTION, APIConstants.API_LOGIN_ACTION));
-        params.add(new BasicNameValuePair(APIConstants.APISTORE_LOGIN_USERNAME, userName));
-        params.add(new BasicNameValuePair(APIConstants.APISTORE_LOGIN_PASSWORD, new String(password)));
-        httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-
-        HttpResponse response = httpClient.execute(httppost, httpContext);
-        HttpEntity entity = response.getEntity();
-        String responseString = EntityUtils.toString(entity, "UTF-8");
-        boolean isError = Boolean.parseBoolean(responseString.split(",")[0].split(":")[1].split("}")[0].trim());
-
-        if (isError) {
-            String errorMsg = responseString.split(",")[1].split(":")[1].split("}")[0].trim();
-            throw new Exception(" Authentication with external APIStore -  failed due to " + errorMsg);
-        } else {
-            return true;
-        }
-    }
-
-    private HttpClient getHttpClient()
-            throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException,
-                   KeyManagementException {
-        //String keyStoreFileName = SoapUI.getSettings().getString("SSLSettings@keyStore", null);
-        //String keyStorePassword = SoapUI.getSettings().getString("SSLSettings@keyStorePassword", null);
-        String keyStoreFileName = "/home/janaka/work/wso2/apim/cluster/wso2am-1.8" + "" +
-                                  ".0/repository/resources/security/client-truststore.jks";
-        String keyStorePassword = "wso2carbon";
-
-        if (httpClient == null) {
-            KeyStore trustStore = KeyStore.getInstance("JKS");
-            FileInputStream inputStream = new FileInputStream(new File(keyStoreFileName));
-            try {
-                trustStore.load(inputStream, keyStorePassword.toCharArray());
-            } finally {
-                inputStream.close();
-            }
-            SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(trustStore, new TrustSelfSignedStrategy())
-                    .build();
-            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, null,
-                                                                              null, SSLConnectionSocketFactory
-                    .BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
-            httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-        }
-        return httpClient;
-    }
-
-    // get all tenant stores
-    // We assume that we get the tenant store URL
-    // We need to login to API store since the REST API still does not support anonymous access
+    /**
+     * This method will return all APIs of the given tenant domain
+     *
+     * @param storeEndpoint The endpoint of the API Store
+     * @param userName      The tenant aware user name
+     * @param password      the password of the user
+     * @param tenantDomain  The tenant domain of the store
+     * @return list of @link{APIInfo}
+     * @throws java.lang.Exception if any error occurs
+     */
     public List<APIInfo> getAllPublishedAPIs(String storeEndpoint, String userName, char[] password,
                                              String tenantDomain) throws Exception {
         List<APIInfo> apiList = new ArrayList<>();
 
         String tenantUserName = userName;
+
+        /*
+         The tenant domain can be empty.
+         If the tenant domain is not empty then we use the tenant aware user name for authentication purposes.
+         If it empty, then we assign super tenant domain name for that.
+         */
         if (!StringUtils.isNullOrEmpty(tenantDomain)) {
-            tenantUserName = userName + "@" + tenantDomain;
+            tenantUserName = constructTenantUserName(userName, tenantDomain);
         } else {
-            tenantDomain = "carbon.super";
+            tenantDomain = APIConstants.CARBON_SUPER;
         }
 
+        // If the authentication process is successful
         if (authenticate(storeEndpoint, tenantUserName, password)) {
             HttpClient httpClient = getHttpClient();
             HttpPost httppost = new HttpPost(getAPIStoreListUrl(storeEndpoint));
@@ -155,13 +115,13 @@ public class APIManagerClient {
             params.add(new BasicNameValuePair(APIConstants.API_ACTION, APIConstants
                     .PAGINATED_PUBLISHED_API_GET_ACTION));
             params.add(new BasicNameValuePair("tenant", tenantDomain));
-            params.add(new BasicNameValuePair("start", "0"));
+            params.add(new BasicNameValuePair("start", Integer.toString(0)));
             params.add(new BasicNameValuePair("end", Integer.toString(Integer.MAX_VALUE)));
-            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+            httppost.setEntity(new UrlEncodedFormEntity(params, APIConstants.UTF_8));
 
             HttpResponse response = httpClient.execute(httppost, httpContext);
             HttpEntity entity = response.getEntity();
-            String responseString = EntityUtils.toString(entity, "UTF-8");
+            String responseString = EntityUtils.toString(entity, APIConstants.UTF_8);
 
             boolean isError = Boolean.parseBoolean(responseString.split(",")[0].split(":")[1].split("}")[0].trim());
             if (isError) {
@@ -202,62 +162,153 @@ public class APIManagerClient {
         return apiList;
     }
 
-    public File downloadSwaggerDocument(String url) throws Exception {
+    /**
+     * Method to authenticate with the given API Store
+     *
+     * @param storeEndpoint The endpoint of the API Store
+     * @param userName      the username with the tenant domain
+     * @param password      the user password
+     * @return true if authentication is successful
+     * throws Exception if any error happens
+     */
+    private boolean authenticate(String storeEndpoint, String userName, char[] password) throws Exception {
+        // create a post request to addAPI.
         HttpClient httpClient = getHttpClient();
 
-        byte[] responseContent = new byte[0];
-        try {
-            HttpPost post = new HttpPost(url);
-            HttpResponse response = httpClient.execute(post);
-            HttpEntity entity = response.getEntity();
-            responseContent = EntityUtils.toByteArray(entity);
-        } catch (IOException e) {
-            SoapUI.logError(e);
-        }
+        HttpPost httppost = new HttpPost(getAPIStoreLoginUrl(storeEndpoint));
+        // Request parameters and other properties.
+        List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 
-        FileOutputStream fileOutputStream = null;
-        File tempFile = File.createTempFile("swagger-definition", null);
-        try {
-            fileOutputStream = new FileOutputStream(tempFile);
-            fileOutputStream.write(responseContent);
-        } catch (IOException e) {
-            SoapUI.logError(e, "Unable to download the swagger definition ");
-        } finally {
-            if (fileOutputStream != null) {
+        params.add(new BasicNameValuePair(APIConstants.API_ACTION, APIConstants.API_LOGIN_ACTION));
+        params.add(new BasicNameValuePair(APIConstants.API_STORE_LOGIN_USERNAME, userName));
+        params.add(new BasicNameValuePair(APIConstants.API_STORE_LOGIN_PASSWORD, new String(password)));
+        httppost.setEntity(new UrlEncodedFormEntity(params, APIConstants.UTF_8));
+
+        HttpResponse response = httpClient.execute(httppost, httpContext);
+        HttpEntity entity = response.getEntity();
+        String responseString = EntityUtils.toString(entity, APIConstants.UTF_8);
+
+        boolean isError = Boolean.parseBoolean(responseString.split(",")[0].split(":")[1].split("}")[0].trim());
+        if (isError) {
+            String errorMsg = responseString.split(",")[1].split(":")[1].split("}")[0].trim();
+            throw new Exception(" Authentication with external APIStore -  failed due to " + errorMsg);
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Method to initialize the http client. We use only one instance of http client since there can not be concurrent
+     * invocations
+     *
+     * @return @link{HttpClient} httpClient instance
+     */
+    private HttpClient getHttpClient() {
+        //TODO
+        //String keyStoreFileName = SoapUI.getSettings().getString("SSLSettings@keyStore", null);
+        //String keyStorePassword = SoapUI.getSettings().getString("SSLSettings@keyStorePassword", null);
+        String keyStoreFileName = "/home/janaka/work/wso2/apim/cluster/wso2am-1.8" + "" +
+                                  ".0/repository/resources/security/client-truststore.jks";
+        String keyStorePassword = "wso2carbon";
+
+        if (httpClient == null) {
+            FileInputStream inputStream = null;
+            try {
+                KeyStore trustStore = KeyStore.getInstance("JKS");
+                inputStream = new FileInputStream(new File(keyStoreFileName));
+
+                trustStore.load(inputStream, keyStorePassword.toCharArray());
+                SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(trustStore, new
+                        TrustSelfSignedStrategy()).build();
+                SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslcontext,
+                                                                                                       null, null,
+                                                                                                       SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+                httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+            } catch (FileNotFoundException e) {
+                SoapUI.logError(e, "Unable to find the trust store file in the given location");
+            } catch (CertificateException e) {
+                SoapUI.logError(e, "Unable to load the trust store ");
+            } catch (NoSuchAlgorithmException e) {
+                SoapUI.logError(e, "Unable to load the trust store");
+            } catch (KeyStoreException e) {
+                SoapUI.logError(e, "Unable to get the key store instance");
+            } catch (IOException e) {
+                SoapUI.logError(e, "Unable to load the trust store");
+            } catch (KeyManagementException e) {
+                SoapUI.logError(e, "Unable to load trust store material");
+            } finally {
                 try {
-                    fileOutputStream.close();
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
                 } catch (IOException e) {
                     // Ignore
                 }
             }
         }
-        return tempFile;
+        return httpClient;
     }
 
+    /**
+     * This method will construct the tenant user name
+     * Ex:- janaka@sampleTenant.com
+     *
+     * @param userName     The user name
+     * @param tenantDomain The tenant domain of the user
+     * @return The tenant user name
+     */
+    private String constructTenantUserName(String userName, String tenantDomain) {
+        String tenantUserName;
+        tenantUserName = userName + APIConstants.TENANT_DOMAIN_SEPARATOR + tenantDomain;
+        return tenantUserName;
+    }
+
+    /**
+     * This method returns the login endpoint of the store
+     * Ex:- https://localgost:9443/store/site/blocks/user/login/ajax/login.jag
+     *
+     * @param baseUrl The endpoint of the API Store
+     * @return the login endpoint URL
+     */
     private String getAPIStoreLoginUrl(String baseUrl) {
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
         }
-        return baseUrl + APIConstants.APISTORE_LOGIN_URL;
+        return baseUrl + APIConstants.API_STORE_LOGIN_URL;
     }
 
+    /**
+     * This method returns the list URL of the API Store
+     * Ex:- https://localhost:9443/store/site/blocks/api/listing/ajax/list.jag
+     *
+     * @param baseUrl The endpoint of the API Store
+     * @return The list endpoint of the API Store
+     */
     private String getAPIStoreListUrl(String baseUrl) {
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
         }
-        return baseUrl + APIConstants.APISTORE_API_LIST_URL;
+        return baseUrl + APIConstants.API_STORE_API_LIST_URL;
     }
 
-    private String getSwaggerDocLink(String baseUrl, String apiName, String apiVersion, String apiProvider)
-            throws Exception {
+    /**
+     * This method returns the swagger doc link of the API
+     * Ex:- https://localhost:9443/store/api-docs/janaka%40janaka.com/WikipediaAPI/1.0.0
+     *
+     * @param baseUrl     The endpoint of the API Store
+     * @param apiName     The name of the API
+     * @param apiVersion  The version of the API
+     * @param apiProvider The provider of the API
+     * @return The swagger doc link of the API
+     */
+    private String getSwaggerDocLink(String baseUrl, String apiName, String apiVersion, String apiProvider) {
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
         }
         try {
-            apiProvider = URLEncoder.encode(apiProvider, "utf-8");
+            apiProvider = URLEncoder.encode(apiProvider, APIConstants.UTF_8);
         } catch (UnsupportedEncodingException e) {
-            SoapUI.log("Error while generating the api-docs URL " + e.getMessage());
-            throw e;
+            SoapUI.logError(e, "Error while generating the api-docs URL ");
         }
         return baseUrl + "/api-docs/" + apiProvider + "/" + apiName + "/" + apiVersion;
     }

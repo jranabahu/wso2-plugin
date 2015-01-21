@@ -18,15 +18,19 @@
 
 package org.wso2.apiManager.plugin.constants;
 
-import javax.xml.namespace.QName;
-
+/**
+ * This class contains all the constants used
+ */
 public final class APIConstants {
     public static final String API_ACTION = "action";
     public static final String API_LOGIN_ACTION = "login";
-    public static final String APISTORE_LOGIN_USERNAME = "username";
-    public static final String APISTORE_LOGIN_PASSWORD = "password";
-    public static final String APISTORE_LOGIN_URL = "/site/blocks/user/login/ajax/login.jag";
-    public static final String APISTORE_API_LIST_URL = "/site/blocks/api/listing/ajax/list.jag";
+    public static final String API_STORE_LOGIN_USERNAME = "username";
+    public static final String API_STORE_LOGIN_PASSWORD = "password";
+    public static final String API_STORE_LOGIN_URL = "/site/blocks/user/login/ajax/login.jag";
+    public static final String API_STORE_API_LIST_URL = "/site/blocks/api/listing/ajax/list.jag";
     public static final String PAGINATED_PUBLISHED_API_GET_ACTION = "getAllPaginatedPublishedAPIs";
 
+    public static final String UTF_8 = "UTF-8";
+    public static final String CARBON_SUPER = "carbon.super";
+    public static final String TENANT_DOMAIN_SEPARATOR = "@";
 }

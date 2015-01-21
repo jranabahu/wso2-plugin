@@ -52,7 +52,6 @@ public class APIExtractorWorker implements Worker {
 
     public static APIExtractionResult downloadAPIList(String url, String userName, char[] password,
                                                           String tenantDomain) {
-        // TODO: findout why
         APIExtractorWorker worker = new APIExtractorWorker(url, userName, password, tenantDomain, UISupport
                 .getDialogs().createProgressDialog("Getting the list of APIs", 0, "", true));
         try {

@@ -18,13 +18,15 @@
 
 package org.wso2.apiManager.plugin.dataObjects;
 
+/**
+ * This class contains the API Information
+ */
 public class APIInfo {
     private String name;
     private String version;
     private String provider;
     private String description;
     private String swaggerDocLink;
-    private String swaggerFileLink;
 
     public String getName() {
         return name;
@@ -64,13 +66,5 @@ public class APIInfo {
 
     public void setSwaggerDocLink(String swaggerDocLink) {
         this.swaggerDocLink = swaggerDocLink;
-    }
-
-    public String getSwaggerFileLink() {
-        return swaggerFileLink;
-    }
-
-    public void setSwaggerFileLink(String swaggerFileLink) {
-        this.swaggerFileLink = swaggerFileLink;
     }
 }
