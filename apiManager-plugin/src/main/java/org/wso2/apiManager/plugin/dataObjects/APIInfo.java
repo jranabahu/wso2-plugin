@@ -24,6 +24,7 @@ public class APIInfo {
     private String provider;
     private String description;
     private String swaggerDocLink;
+    private String swaggerFileLink;
 
     public String getName() {
         return name;
@@ -63,5 +64,13 @@ public class APIInfo {
 
     public void setSwaggerDocLink(String swaggerDocLink) {
         this.swaggerDocLink = swaggerDocLink;
+    }
+
+    public String getSwaggerFileLink() {
+        return swaggerFileLink;
+    }
+
+    public void setSwaggerFileLink(String swaggerFileLink) {
+        this.swaggerFileLink = swaggerFileLink;
     }
 }

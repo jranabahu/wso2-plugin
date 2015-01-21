@@ -5,7 +5,6 @@ import com.eviware.soapui.model.iface.InterfaceListener;
 import com.eviware.soapui.model.iface.SoapUIListener;
 import com.eviware.soapui.plugins.PluginAdapter;
 import com.eviware.soapui.plugins.PluginConfiguration;
-import org.wso2.apiManager.plugin.listener.RequestListener;
 
 import java.util.List;
 

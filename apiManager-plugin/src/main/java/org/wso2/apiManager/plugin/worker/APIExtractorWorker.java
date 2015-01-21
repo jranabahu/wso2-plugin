@@ -25,23 +25,23 @@ import com.eviware.x.dialogs.Worker;
 import com.eviware.x.dialogs.XProgressDialog;
 import com.eviware.x.dialogs.XProgressMonitor;
 import org.wso2.apiManager.plugin.client.APIManagerClient;
-import org.wso2.apiManager.plugin.dataObjects.APIListExtractionResult;
+import org.wso2.apiManager.plugin.dataObjects.APIExtractionResult;
 
 /**
  * This class acts as the worker class to fetch APIs from WSO2 API Manager.
  */
 public class APIExtractorWorker implements Worker {
     private XProgressDialog waitDialog = null;
-    private APIListExtractionResult result = new APIListExtractionResult();
+    private APIExtractionResult result = new APIExtractionResult();
 
     private String url = null;
     private String userName;
-    private String password;
+    private char[] password;
     private String tenantDomain;
 
     private String apiRetrievingError = null;
 
-    public APIExtractorWorker(String url, String userName, String password, String tenantDomain,
+    public APIExtractorWorker(String url, String userName, char[] password, String tenantDomain,
                               XProgressDialog waitDialog) {
         this.waitDialog = waitDialog;
         this.url = url;
@@ -50,7 +50,7 @@ public class APIExtractorWorker implements Worker {
         this.tenantDomain = tenantDomain;
     }
 
-    public static APIListExtractionResult downloadAPIList(String url, String userName, String password,
+    public static APIExtractionResult downloadAPIList(String url, String userName, char[] password,
                                                           String tenantDomain) {
         // TODO: findout why
         APIExtractorWorker worker = new APIExtractorWorker(url, userName, password, tenantDomain, UISupport
@@ -59,7 +59,7 @@ public class APIExtractorWorker implements Worker {
             worker.waitDialog.run(worker);
         } catch (Exception e) {
             SoapUI.logError(e);
-            worker.result.addError(e.getMessage());
+            worker.result.setError(e.getMessage());
         }
         return worker.result;
     }
@@ -67,7 +67,7 @@ public class APIExtractorWorker implements Worker {
     @Override
     public Object construct(XProgressMonitor xProgressMonitor) {
         try {
-            result.setApis(APIManagerClient.getInstance().getAllPublishedAPIs(url, userName, password, tenantDomain));
+            result.setApiList(APIManagerClient.getInstance().getAllPublishedAPIs(url, userName, password, tenantDomain));
         } catch (Exception e) {
             SoapUI.logError(e);
             apiRetrievingError = e.getMessage();
@@ -85,18 +85,18 @@ public class APIExtractorWorker implements Worker {
         }
         waitDialog.setVisible(false);
         if (StringUtils.hasContent(apiRetrievingError)) {
-            result.addError("Unable to read API list from the specified WSO2 API Manager Store because of the " +
+            result.setError("Unable to read API list from the specified WSO2 API Manager Store because of the " +
                             "following error:\n" + apiRetrievingError);
             return;
         }
-        if (result.getApis() == null || result.getApis().isEmpty()) {
-            result.addError("No API is accessible at the specified URL or registered correctly.");
+        if (result.getApiList() == null || result.getApiList().isEmpty()) {
+            result.setError("No API is accessible at the specified URL or registered correctly.");
         }
     }
 
     @Override
     public boolean onCancel() {
-        result.cancel();
+        result.setCanceled();
         waitDialog.setVisible(false);
         return true;
     }

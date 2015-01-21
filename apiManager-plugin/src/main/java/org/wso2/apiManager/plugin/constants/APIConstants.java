@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.apiManager.plugin;
+package org.wso2.apiManager.plugin.constants;
 
 import javax.xml.namespace.QName;
 

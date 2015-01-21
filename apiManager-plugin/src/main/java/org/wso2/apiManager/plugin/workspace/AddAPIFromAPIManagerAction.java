@@ -13,8 +13,9 @@ import com.eviware.x.form.XFormFieldValidator;
 import com.eviware.x.form.support.ADialogBuilder;
 import org.wso2.apiManager.plugin.ActionGroups;
 import org.wso2.apiManager.plugin.Utils;
+import org.wso2.apiManager.plugin.constants.HelpMessageConstants;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
-import org.wso2.apiManager.plugin.dataObjects.APIListExtractionResult;
+import org.wso2.apiManager.plugin.dataObjects.APIExtractionResult;
 import org.wso2.apiManager.plugin.ui.ImportModel;
 import org.wso2.apiManager.plugin.worker.APIExtractorWorker;
 import org.wso2.apiManager.plugin.worker.APIImporterWorker;
@@ -22,9 +23,13 @@ import org.wso2.apiManager.plugin.worker.APIImporterWorker;
 import java.net.URL;
 import java.util.List;
 
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.API_STORE_URL_VALIDATION_MSG;
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.USER_NAME_VALIDATION_MSG;
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.PASSWORD_VALIDATION_MSG;
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.INVALID_API_STORE_URL;
+
 @ActionConfiguration(actionGroup = ActionGroups.OPEN_PROJECT_ACTIONS, separatorBefore = true)
 public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject> {
-
     private XFormDialog dialog;
 
     public AddAPIFromAPIManagerAction() {
@@ -33,27 +38,27 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
 
     @Override
     public void perform(WsdlProject wsdlProject, Object o) {
-        APIListExtractionResult listExtractionResult = null;
+        APIExtractionResult listExtractionResult = null;
         if (dialog == null) {
             dialog = ADialogBuilder.buildDialog(ImportModel.class);
             dialog.getFormField(ImportModel.API_STORE_URL).addFormFieldValidator(new XFormFieldValidator() {
                 @Override
                 public ValidationMessage[] validateField(XFormField formField) {
                     if (StringUtils.isNullOrEmpty(dialog.getValue(ImportModel.API_STORE_URL))) {
-                        return new ValidationMessage[]{new ValidationMessage("Please enter the API Store URL.", dialog
+                        return new ValidationMessage[]{new ValidationMessage(API_STORE_URL_VALIDATION_MSG, dialog
                                 .getFormField(ImportModel.API_STORE_URL))};
                     }
                     if (StringUtils.isNullOrEmpty(dialog.getValue(ImportModel.USER_NAME))) {
-                        return new ValidationMessage[]{new ValidationMessage("Please enter user name.", dialog
+                        return new ValidationMessage[]{new ValidationMessage(USER_NAME_VALIDATION_MSG, dialog
                                 .getFormField(ImportModel.USER_NAME))};
                     }
                     if (StringUtils.isNullOrEmpty(dialog.getValue(ImportModel.PASSWORD))) {
-                        return new ValidationMessage[]{new ValidationMessage("Please enter an valid password.", dialog
+                        return new ValidationMessage[]{new ValidationMessage(PASSWORD_VALIDATION_MSG, dialog
                                 .getFormField(ImportModel.PASSWORD))};
                     }
                     URL storeUrl = Utils.validateURL(formField.getValue());
                     if (storeUrl == null) {
-                        return new ValidationMessage[]{new ValidationMessage("Invalid API Store URL.", formField)};
+                        return new ValidationMessage[]{new ValidationMessage(INVALID_API_STORE_URL, formField)};
                     }
                     return new ValidationMessage[0];
                 }
@@ -62,23 +67,22 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
         while (dialog.show()) {
             String urlString = dialog.getValue(ImportModel.API_STORE_URL);
             String userName = dialog.getValue(ImportModel.USER_NAME);
-            String password = dialog.getValue(ImportModel.PASSWORD);
+            char[] password = dialog.getValue(ImportModel.PASSWORD).toCharArray();
             String tenantDomain = dialog.getValue(ImportModel.TENANT_DOMAIN);
             if (urlString == null) {
                 return;
             }
             URL url = Utils.validateURL(urlString);
             if (url == null) {
-                UISupport.showErrorMessage("Invalid URL");
+                UISupport.showErrorMessage(INVALID_API_STORE_URL);
                 continue;
             }
-            //TODO: FIX properly
             listExtractionResult = APIExtractorWorker.downloadAPIList(url.toString(), userName, password, tenantDomain);
             if (listExtractionResult.isCanceled()) {
                 return;
             }
 
-            if (listExtractionResult.getApis() != null) {
+            if (listExtractionResult.getApiList() != null) {
                 break;
             }
             UISupport.showErrorMessage(listExtractionResult.getError());
@@ -87,7 +91,7 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
             return;
         }
 
-        List<APIInfo> selectedAPIs = Utils.showSelectAPIDefDialog(listExtractionResult.getApis());
+        List<APIInfo> selectedAPIs = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
         if (selectedAPIs != null) {
             List<RestService> services = APIImporterWorker.importServices(selectedAPIs, wsdlProject);
             if (services != null && services.size() != 0) {

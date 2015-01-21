@@ -20,13 +20,17 @@ package org.wso2.apiManager.plugin.dataObjects;
 
 import java.util.List;
 
-public class APIListExtractionResult {
-    private List<APIInfo> apis = null;
+/**
+ * Class that holds the API Extracted Results
+ * This class contains the list of APIs, any error that occur or whether the results have been canceled.
+ */
+public class APIExtractionResult {
+    private List<APIInfo> apiList = null;
     private String error = null;
     private boolean canceled = false;
 
-    public void addError(String errorText) {
-        apis = null;
+    public void setError(String errorText) {
+        apiList = null;
         if (error == null) {
             error = errorText;
         } else {
@@ -34,32 +38,25 @@ public class APIListExtractionResult {
         }
     }
 
-    public void cancel() {
+    public void setCanceled() {
         canceled = true;
-        apis = null;
+        apiList = null;
     }
 
-    public List<APIInfo> getApis() {
-        return apis;
+    public List<APIInfo> getApiList() {
+        return apiList;
     }
 
-    public void setApis(List<APIInfo> apis) {
-        this.apis = apis;
+    public void setApiList(List<APIInfo> apiList) {
+        this.apiList = apiList;
     }
 
     public String getError() {
         return error;
     }
 
-    public void setError(String error) {
-        this.error = error;
-    }
-
     public boolean isCanceled() {
         return canceled;
     }
 
-    public void setCanceled(boolean canceled) {
-        this.canceled = canceled;
-    }
 }

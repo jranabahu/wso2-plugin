@@ -23,7 +23,6 @@ import com.eviware.soapui.support.StringUtils;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
-import net.minidev.json.parser.JSONParser;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -32,18 +31,32 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.wso2.apiManager.plugin.APIConstants;
+import org.wso2.apiManager.plugin.constants.APIConstants;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 
+import javax.net.ssl.SSLContext;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -52,6 +65,7 @@ import java.util.List;
 public class APIManagerClient {
     private static APIManagerClient apiManagerClient = null;
     private HttpContext httpContext = new BasicHttpContext();
+    private HttpClient httpClient;
 
     private APIManagerClient() {
         CookieStore cookieStore = new BasicCookieStore();
@@ -65,16 +79,17 @@ public class APIManagerClient {
         return apiManagerClient;
     }
 
-    private boolean authenticate(String storeEndpoint, String userName, String password) throws Exception {
+    private boolean authenticate(String storeEndpoint, String userName, char[] password) throws Exception {
         // create a post request to addAPI.
-        HttpClient httpClient = new DefaultHttpClient();
+        HttpClient httpClient = getHttpClient();
+
         HttpPost httppost = new HttpPost(getAPIStoreLoginUrl(storeEndpoint));
         // Request parameters and other properties.
         List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 
         params.add(new BasicNameValuePair(APIConstants.API_ACTION, APIConstants.API_LOGIN_ACTION));
         params.add(new BasicNameValuePair(APIConstants.APISTORE_LOGIN_USERNAME, userName));
-        params.add(new BasicNameValuePair(APIConstants.APISTORE_LOGIN_PASSWORD, password));
+        params.add(new BasicNameValuePair(APIConstants.APISTORE_LOGIN_PASSWORD, new String(password)));
         httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 
         HttpResponse response = httpClient.execute(httppost, httpContext);
@@ -90,22 +105,49 @@ public class APIManagerClient {
         }
     }
 
+    private HttpClient getHttpClient()
+            throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException,
+                   KeyManagementException {
+        //String keyStoreFileName = SoapUI.getSettings().getString("SSLSettings@keyStore", null);
+        //String keyStorePassword = SoapUI.getSettings().getString("SSLSettings@keyStorePassword", null);
+        String keyStoreFileName = "/home/janaka/work/wso2/apim/cluster/wso2am-1.8" + "" +
+                                  ".0/repository/resources/security/client-truststore.jks";
+        String keyStorePassword = "wso2carbon";
+
+        if (httpClient == null) {
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            FileInputStream inputStream = new FileInputStream(new File(keyStoreFileName));
+            try {
+                trustStore.load(inputStream, keyStorePassword.toCharArray());
+            } finally {
+                inputStream.close();
+            }
+            SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(trustStore, new TrustSelfSignedStrategy())
+                    .build();
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, null,
+                                                                              null, SSLConnectionSocketFactory
+                    .BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+            httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+        }
+        return httpClient;
+    }
+
     // get all tenant stores
     // We assume that we get the tenant store URL
     // We need to login to API store since the REST API still does not support anonymous access
-    public List<APIInfo> getAllPublishedAPIs(String storeEndpoint, String userName, String password, String
-            tenantDomain) throws Exception {
+    public List<APIInfo> getAllPublishedAPIs(String storeEndpoint, String userName, char[] password,
+                                             String tenantDomain) throws Exception {
         List<APIInfo> apiList = new ArrayList<>();
 
         String tenantUserName = userName;
-        if(!StringUtils.isNullOrEmpty(tenantDomain)){
+        if (!StringUtils.isNullOrEmpty(tenantDomain)) {
             tenantUserName = userName + "@" + tenantDomain;
-        }else{
+        } else {
             tenantDomain = "carbon.super";
         }
 
         if (authenticate(storeEndpoint, tenantUserName, password)) {
-            HttpClient httpClient = new DefaultHttpClient();
+            HttpClient httpClient = getHttpClient();
             HttpPost httppost = new HttpPost(getAPIStoreListUrl(storeEndpoint));
             // Request parameters and other properties.
             List<NameValuePair> params = new ArrayList<NameValuePair>(3);
@@ -160,6 +202,38 @@ public class APIManagerClient {
         return apiList;
     }
 
+    public File downloadSwaggerDocument(String url) throws Exception {
+        HttpClient httpClient = getHttpClient();
+
+        byte[] responseContent = new byte[0];
+        try {
+            HttpPost post = new HttpPost(url);
+            HttpResponse response = httpClient.execute(post);
+            HttpEntity entity = response.getEntity();
+            responseContent = EntityUtils.toByteArray(entity);
+        } catch (IOException e) {
+            SoapUI.logError(e);
+        }
+
+        FileOutputStream fileOutputStream = null;
+        File tempFile = File.createTempFile("swagger-definition", null);
+        try {
+            fileOutputStream = new FileOutputStream(tempFile);
+            fileOutputStream.write(responseContent);
+        } catch (IOException e) {
+            SoapUI.logError(e, "Unable to download the swagger definition ");
+        } finally {
+            if (fileOutputStream != null) {
+                try {
+                    fileOutputStream.close();
+                } catch (IOException e) {
+                    // Ignore
+                }
+            }
+        }
+        return tempFile;
+    }
+
     private String getAPIStoreLoginUrl(String baseUrl) {
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
@@ -175,17 +249,15 @@ public class APIManagerClient {
     }
 
     private String getSwaggerDocLink(String baseUrl, String apiName, String apiVersion, String apiProvider)
-            throws Exception{
+            throws Exception {
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
         }
-        if (apiProvider.contains("@")) {
-            try {
-                apiProvider = URLEncoder.encode(apiProvider, "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                SoapUI.log("Error while generating the api-docs URL " + e.getMessage());
-                throw e;
-            }
+        try {
+            apiProvider = URLEncoder.encode(apiProvider, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            SoapUI.log("Error while generating the api-docs URL " + e.getMessage());
+            throw e;
         }
         return baseUrl + "/api-docs/" + apiProvider + "/" + apiName + "/" + apiVersion;
     }

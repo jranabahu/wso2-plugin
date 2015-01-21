@@ -28,6 +28,7 @@ import com.eviware.x.form.XFormDialog;
 import com.eviware.x.form.support.ADialogBuilder;
 import com.smartbear.swagger.SwaggerImporter;
 import com.smartbear.swagger.SwaggerUtils;
+import org.wso2.apiManager.plugin.client.APIManagerClient;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 import org.wso2.apiManager.plugin.ui.APIModel;
 
@@ -35,6 +36,7 @@ import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;

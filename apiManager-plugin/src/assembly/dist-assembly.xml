@@ -13,6 +13,7 @@
                 <include>com.smartbear:swagger4j</include>
                 <include>com.wordnik:swagger-core</include>
                 <include>com.wordnik:swagger-models</include>
+                <include>org.apache.http*</include>
             </includes>
         </dependencySet>
         <dependencySet>

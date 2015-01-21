@@ -24,10 +24,8 @@ import com.eviware.soapui.impl.rest.RestRequest;
 import com.eviware.soapui.impl.rest.RestResource;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
-import com.eviware.soapui.model.iface.Request;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.UISupport;
-import com.eviware.soapui.support.types.StringToStringMap;
 import com.eviware.x.dialogs.Worker;
 import com.eviware.x.dialogs.XProgressDialog;
 import com.eviware.x.dialogs.XProgressMonitor;
@@ -54,10 +52,9 @@ public class APIImporterWorker implements Worker {
     }
 
     public static List<RestService> importServices(List<APIInfo> links, WsdlProject project) {
-        APIImporterWorker worker = new APIImporterWorker(UISupport.getDialogs().createProgressDialog("Importing APIs." +
-                                                                                                     "..", 100, "",
-                                                                                                     true), links,
-                                                         project);
+        APIImporterWorker worker =
+                new APIImporterWorker(UISupport.getDialogs().createProgressDialog("Importing APIs...", 100, "", true),
+                                      links, project);
         try {
             worker.waitDialog.run(worker);
         } catch (Exception e) {
@@ -97,7 +94,6 @@ public class APIImporterWorker implements Worker {
                     }
                 }
             } catch (Throwable e) {
-
                 if (errors.length() > 0) {
                     errors += "\n";
                 }
