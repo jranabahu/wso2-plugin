@@ -19,6 +19,8 @@
 package org.wso2.apiManager.plugin.worker;
 
 import com.eviware.soapui.SoapUI;
+import com.eviware.soapui.config.CredentialsConfig;
+import com.eviware.soapui.impl.rest.OAuth2ProfileContainer;
 import com.eviware.soapui.impl.rest.RestMethod;
 import com.eviware.soapui.impl.rest.RestRequest;
 import com.eviware.soapui.impl.rest.RestResource;
@@ -30,6 +32,7 @@ import com.eviware.x.dialogs.Worker;
 import com.eviware.x.dialogs.XProgressDialog;
 import com.eviware.x.dialogs.XProgressMonitor;
 import org.wso2.apiManager.plugin.Utils;
+import org.wso2.apiManager.plugin.constants.APIConstants;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 
 import java.util.ArrayList;
@@ -77,6 +80,12 @@ public class APIImporterWorker implements Worker {
             RestService[] service;
             try {
                 service = Utils.importAPItoProject(apiInfo, project);
+
+                OAuth2ProfileContainer profileContainer = project.getOAuth2ProfileContainer();
+                if(profileContainer.getProfileByName(APIConstants.WSO2_API_MANAGER_DEFAULT) == null){
+                    profileContainer.addNewOAuth2Profile(APIConstants.WSO2_API_MANAGER_DEFAULT);
+                }
+
                 if (service != null) {
                     for (RestService restService : service) {
                         List<RestResource> resources = restService.getAllResources();
@@ -85,7 +94,8 @@ public class APIImporterWorker implements Worker {
                             for (RestMethod method : methods) {
                                 List<RestRequest> restRequests = method.getRequestList();
                                 for (RestRequest restRequest : restRequests) {
-                                    Utils.setAuthorizationHeader(restRequest);
+                                    restRequest.setSelectedAuthProfileAndAuthType(APIConstants.WSO2_API_MANAGER_DEFAULT,
+                                                                                  CredentialsConfig.AuthType.O_AUTH_2_0);
                                 }
                             }
                         }

@@ -19,16 +19,13 @@
 package org.wso2.apiManager.plugin;
 
 import com.eviware.soapui.SoapUI;
-import com.eviware.soapui.impl.rest.RestRequest;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.support.StringUtils;
-import com.eviware.soapui.support.types.StringToStringMap;
 import com.eviware.x.form.XFormDialog;
 import com.eviware.x.form.support.ADialogBuilder;
 import com.smartbear.swagger.SwaggerImporter;
 import com.smartbear.swagger.SwaggerUtils;
-import org.wso2.apiManager.plugin.client.APIManagerClient;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 import org.wso2.apiManager.plugin.ui.APIModel;
 
@@ -36,7 +33,6 @@ import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -103,13 +99,13 @@ public class Utils {
         apiTable.setColumnSelectionAllowed(false);
         apiTable.setRowSelectionAllowed(true);
         apiTable.setFillsViewportHeight(true);
-        apiTable.setPreferredScrollableViewportSize(new Dimension(500,200));
+        apiTable.setPreferredScrollableViewportSize(new Dimension(500, 200));
 
         JScrollPane scrollPane = new JScrollPane(apiTable);
-        scrollPane.setPreferredSize(new Dimension(500,200));
+        scrollPane.setPreferredSize(new Dimension(500, 200));
 
         dialog.setFormFieldProperty("component", scrollPane);
-        dialog.setFormFieldProperty("preferredSize", new Dimension(500,200));
+        dialog.setFormFieldProperty("preferredSize", new Dimension(500, 200));
 
         if (dialog.show()) {
             int[] selected = apiTable.getSelectedRows();
@@ -142,11 +138,5 @@ public class Utils {
             convertedData[i][3] = apiInfo.getDescription();
         }
         return convertedData;
-    }
-
-    public static void setAuthorizationHeader(RestRequest restRequest) {
-        StringToStringMap map = new StringToStringMap(1);
-        map.putIfMissing("Authorization","Bearer <MY_ACCESS_TOKEN>");
-        restRequest.setRequestHeaders(map);
     }
 }

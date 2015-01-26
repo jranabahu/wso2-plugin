@@ -33,4 +33,5 @@ public final class APIConstants {
     public static final String UTF_8 = "UTF-8";
     public static final String CARBON_SUPER = "carbon.super";
     public static final String TENANT_DOMAIN_SEPARATOR = "@";
+    public static final String WSO2_API_MANAGER_DEFAULT = "wso2-api-manager-default";
 }
