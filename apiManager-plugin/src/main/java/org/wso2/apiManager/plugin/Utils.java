@@ -99,13 +99,13 @@ public class Utils {
         apiTable.setColumnSelectionAllowed(false);
         apiTable.setRowSelectionAllowed(true);
         apiTable.setFillsViewportHeight(true);
-        apiTable.setPreferredScrollableViewportSize(new Dimension(500, 200));
+        apiTable.setPreferredScrollableViewportSize(new Dimension(600, 200));
 
         JScrollPane scrollPane = new JScrollPane(apiTable);
-        scrollPane.setPreferredSize(new Dimension(500, 200));
+        scrollPane.setPreferredSize(new Dimension(600, 200));
 
         dialog.setFormFieldProperty("component", scrollPane);
-        dialog.setFormFieldProperty("preferredSize", new Dimension(500, 200));
+        dialog.setFormFieldProperty("preferredSize", new Dimension(600, 200));
 
         if (dialog.show()) {
             int[] selected = apiTable.getSelectedRows();

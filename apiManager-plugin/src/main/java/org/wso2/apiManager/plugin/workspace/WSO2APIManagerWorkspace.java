@@ -50,7 +50,7 @@ import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.INVALID_
 /**
  * This class is used to generate a new workspace for the WSO2 API Manager projects
  */
-@PluginImportMethod(label = "WSO2 API Manager")
+@PluginImportMethod(label = "Import from WSO2 API Manager")
 public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl> {
     private APIExtractionResult listExtractionResult = null;
 

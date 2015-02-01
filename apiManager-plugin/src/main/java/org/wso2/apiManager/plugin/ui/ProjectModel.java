@@ -31,7 +31,7 @@ public interface ProjectModel {
     public final static String PROJECT_NAME = "Project Name";
 
     @AField(name = "API Store URL",
-            description = "API Store URL (i.e. https://192.168.122.1:9443/store/)",
+            description = "API Store URL (i.e. https://localhost:9443/store/)",
             type = AField.AFieldType.STRING)
     public final static String API_STORE_URL = "API Store URL";
 

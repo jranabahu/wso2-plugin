@@ -28,7 +28,7 @@ import com.eviware.x.form.support.AForm;
         description = "Creates a new Project from API specification on WSO2 API Store in this workspace")
 public interface ImportModel {
     @AField(name = "API Store URL",
-            description = "API Store URL (i.e. https://192.168.122.1:9443/store/)",
+            description = "API Store URL (i.e. https://localhost:9443/store/)",
             type = AField.AFieldType.STRING)
     public final static String API_STORE_URL = "API Store URL";
 
