@@ -40,13 +40,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public class APIImporterWorker implements Worker {
+    String errors = "";
     private XProgressDialog waitDialog;
     private boolean cancelled = false;
     private List<APIInfo> links;
     private WsdlProject project;
     private List<RestService> addedServices = new ArrayList<RestService>();
-
-    String errors = "";
 
     private APIImporterWorker(XProgressDialog waitDialog, List<APIInfo> links, WsdlProject project) {
         this.waitDialog = waitDialog;
@@ -55,9 +54,10 @@ public class APIImporterWorker implements Worker {
     }
 
     public static List<RestService> importServices(List<APIInfo> links, WsdlProject project) {
-        APIImporterWorker worker =
-                new APIImporterWorker(UISupport.getDialogs().createProgressDialog("Importing APIs...", 100, "", true),
-                                      links, project);
+        APIImporterWorker worker = new APIImporterWorker(UISupport.getDialogs().createProgressDialog("Importing APIs." +
+                                                                                                     "..", 100, "",
+                                                                                                     true), links,
+                                                         project);
         try {
             worker.waitDialog.run(worker);
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class APIImporterWorker implements Worker {
                 service = Utils.importAPItoProject(apiInfo, project);
 
                 OAuth2ProfileContainer profileContainer = project.getOAuth2ProfileContainer();
-                if(profileContainer.getProfileByName(APIConstants.WSO2_API_MANAGER_DEFAULT) == null){
+                if (profileContainer.getProfileByName(APIConstants.WSO2_API_MANAGER_DEFAULT) == null) {
                     profileContainer.addNewOAuth2Profile(APIConstants.WSO2_API_MANAGER_DEFAULT);
                 }
 
@@ -94,8 +94,13 @@ public class APIImporterWorker implements Worker {
                             for (RestMethod method : methods) {
                                 List<RestRequest> restRequests = method.getRequestList();
                                 for (RestRequest restRequest : restRequests) {
-                                    restRequest.setSelectedAuthProfileAndAuthType(APIConstants.WSO2_API_MANAGER_DEFAULT,
-                                                                                  CredentialsConfig.AuthType.O_AUTH_2_0);
+                                    restRequest.setSelectedAuthProfileAndAuthType(APIConstants
+                                                                                          .WSO2_API_MANAGER_DEFAULT,
+                                                                                  CredentialsConfig.AuthType
+                                                                                          .O_AUTH_2_0);
+                                    // This will rename the request name to something similar to
+                                    // get_repos/{user_name}/{repo_name} - default_request
+                                    restRequest.setName(constructRequestName(method.getName()));
                                 }
                             }
                         }
@@ -108,7 +113,8 @@ public class APIImporterWorker implements Worker {
                     errors += "\n";
                 }
 
-                errors = String.format("Failed to read API description for[%s] - [%s]", apiInfo.getName(), e.getMessage());
+                errors = String.format("Failed to read API description for[%s] - [%s]", apiInfo.getName(), e
+                        .getMessage());
                 SoapUI.logError(e);
                 continue;
             }
@@ -142,7 +148,11 @@ public class APIImporterWorker implements Worker {
         return true;
     }
 
-    private String constructServiceName(APIInfo apiInfo, String resourceName){
+    private String constructServiceName(APIInfo apiInfo, String resourceName) {
         return apiInfo.getName() + "/" + apiInfo.getVersion() + resourceName;
+    }
+
+    private String constructRequestName(String methodName) {
+        return methodName + " - " + "default_request";
     }
 }

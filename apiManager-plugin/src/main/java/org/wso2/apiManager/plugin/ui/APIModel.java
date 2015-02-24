@@ -27,4 +27,6 @@ public interface APIModel {
     @AField(description = "", type = AField.AFieldType.COMPONENT)
     public static final String API_INFO = "";
 
+    @AField(description = "Generate test suite", type = AField.AFieldType.COMBOBOX)
+    public static final String TEST_SUITE = "TEST_SUITE";
 }

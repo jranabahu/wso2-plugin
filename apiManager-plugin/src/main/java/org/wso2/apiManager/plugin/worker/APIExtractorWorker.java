@@ -46,12 +46,12 @@ public class APIExtractorWorker implements Worker {
         this.waitDialog = waitDialog;
         this.url = url;
         this.userName = userName;
-        this.password = password;
+        this.password = password.clone(); // This is to fix findbugs Malicious code vulnerability
         this.tenantDomain = tenantDomain;
     }
 
     public static APIExtractionResult downloadAPIList(String url, String userName, char[] password,
-                                                          String tenantDomain) {
+                                                      String tenantDomain) {
         APIExtractorWorker worker = new APIExtractorWorker(url, userName, password, tenantDomain, UISupport
                 .getDialogs().createProgressDialog("Getting the list of APIs", 0, "", true));
         try {
@@ -66,7 +66,8 @@ public class APIExtractorWorker implements Worker {
     @Override
     public Object construct(XProgressMonitor xProgressMonitor) {
         try {
-            result.setApiList(APIManagerClient.getInstance().getAllPublishedAPIs(url, userName, password, tenantDomain));
+            result.setApiList(APIManagerClient.getInstance().getAllPublishedAPIs(url, userName, password,
+                                                                                 tenantDomain));
         } catch (Exception e) {
             SoapUI.logError(e);
             apiRetrievingError = e.getMessage();
@@ -95,8 +96,8 @@ public class APIExtractorWorker implements Worker {
 
     @Override
     public boolean onCancel() {
-        result.setCanceled();
         waitDialog.setVisible(false);
+        result.setCanceled();
         return true;
     }
 }

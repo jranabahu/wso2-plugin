@@ -82,17 +82,12 @@ public class Utils {
                 return data[rowIndex][columnIndex];
             }
 
-            @Override
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return false;
-            }
 
             @Override
             public String getColumnName(int column) {
                 return columnNames[column];
             }
         };
-
 
         JTable apiTable = new JTable(tableModel);
         apiTable.setCellSelectionEnabled(false);

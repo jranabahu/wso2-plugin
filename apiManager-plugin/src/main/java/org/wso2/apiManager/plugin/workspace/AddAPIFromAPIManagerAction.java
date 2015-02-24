@@ -1,3 +1,22 @@
+/*
+*  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+*
+*  WSO2 Inc. licenses this file to you under the Apache License,
+*  Version 2.0 (the "License"); you may not use this file except
+*  in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
+
 package org.wso2.apiManager.plugin.workspace;
 
 import com.eviware.soapui.impl.rest.RestService;
@@ -13,9 +32,8 @@ import com.eviware.x.form.XFormFieldValidator;
 import com.eviware.x.form.support.ADialogBuilder;
 import org.wso2.apiManager.plugin.ActionGroups;
 import org.wso2.apiManager.plugin.Utils;
-import org.wso2.apiManager.plugin.constants.HelpMessageConstants;
-import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 import org.wso2.apiManager.plugin.dataObjects.APIExtractionResult;
+import org.wso2.apiManager.plugin.dataObjects.APIInfo;
 import org.wso2.apiManager.plugin.ui.ImportModel;
 import org.wso2.apiManager.plugin.worker.APIExtractorWorker;
 import org.wso2.apiManager.plugin.worker.APIImporterWorker;
@@ -24,9 +42,9 @@ import java.net.URL;
 import java.util.List;
 
 import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.API_STORE_URL_VALIDATION_MSG;
-import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.USER_NAME_VALIDATION_MSG;
-import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.PASSWORD_VALIDATION_MSG;
 import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.INVALID_API_STORE_URL;
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.PASSWORD_VALIDATION_MSG;
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.USER_NAME_VALIDATION_MSG;
 
 @ActionConfiguration(actionGroup = ActionGroups.OPEN_PROJECT_ACTIONS, separatorBefore = true)
 public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject> {
@@ -87,7 +105,7 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
             }
             UISupport.showErrorMessage(listExtractionResult.getError());
         }
-        if(listExtractionResult == null){
+        if (listExtractionResult == null) {
             return;
         }
 

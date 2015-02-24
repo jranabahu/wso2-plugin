@@ -29,15 +29,6 @@ public class APIExtractionResult {
     private String error = null;
     private boolean canceled = false;
 
-    public void setError(String errorText) {
-        apiList = null;
-        if (error == null) {
-            error = errorText;
-        } else {
-            error = error + "\n" + errorText;
-        }
-    }
-
     public void setCanceled() {
         canceled = true;
         apiList = null;
@@ -53,6 +44,15 @@ public class APIExtractionResult {
 
     public String getError() {
         return error;
+    }
+
+    public void setError(String errorText) {
+        apiList = null;
+        if (error == null) {
+            error = errorText;
+        } else {
+            error = error + "\n" + errorText;
+        }
     }
 
     public boolean isCanceled() {

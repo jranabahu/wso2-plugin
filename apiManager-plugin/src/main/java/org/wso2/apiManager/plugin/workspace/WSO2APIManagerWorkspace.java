@@ -31,21 +31,20 @@ import com.eviware.x.form.XFormDialog;
 import com.eviware.x.form.XFormField;
 import com.eviware.x.form.XFormFieldValidator;
 import com.eviware.x.form.support.ADialogBuilder;
+import org.wso2.apiManager.plugin.Utils;
+import org.wso2.apiManager.plugin.dataObjects.APIExtractionResult;
+import org.wso2.apiManager.plugin.dataObjects.APIInfo;
+import org.wso2.apiManager.plugin.ui.ProjectModel;
 import org.wso2.apiManager.plugin.worker.APIExtractorWorker;
 import org.wso2.apiManager.plugin.worker.APIImporterWorker;
-import org.wso2.apiManager.plugin.Utils;
-import org.wso2.apiManager.plugin.dataObjects.APIInfo;
-import org.wso2.apiManager.plugin.dataObjects.APIExtractionResult;
-import org.wso2.apiManager.plugin.ui.ProjectModel;
 
 import java.net.URL;
 import java.util.List;
 
-import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.API_STORE_URL_VALIDATION_MSG;
-import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.USER_NAME_VALIDATION_MSG;
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.INVALID_API_STORE_URL;
 import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.PASSWORD_VALIDATION_MSG;
 import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.PROJECT_NAME_VALIDATION_MSG;
-import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.INVALID_API_STORE_URL;
+import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.USER_NAME_VALIDATION_MSG;
 
 /**
  * This class is used to generate a new workspace for the WSO2 API Manager projects
@@ -89,8 +88,8 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
                     return new ValidationMessage[]{new ValidationMessage(INVALID_API_STORE_URL, formField)};
                 }
                 listExtractionResult = APIExtractorWorker.downloadAPIList(storeUrl.toString(), dialog.getValue
-                        (ProjectModel.USER_NAME), dialog.getValue(ProjectModel.PASSWORD).toCharArray(), dialog.getValue
-                        (ProjectModel.TENANT_DOMAIN));
+                        (ProjectModel.USER_NAME), dialog.getValue(ProjectModel.PASSWORD).toCharArray(), dialog
+                        .getValue(ProjectModel.TENANT_DOMAIN));
                 if (StringUtils.hasContent(listExtractionResult.getError())) {
                     return new ValidationMessage[]{new ValidationMessage(listExtractionResult.getError(), formField)};
                 }
@@ -112,7 +111,7 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
                     return;
                 }
                 List<RestService> services = APIImporterWorker.importServices(selectedAPIs, project);
-                if (services != null && services.size() != 0) {
+                if (services != null && !services.isEmpty()) {
                     UISupport.select(services.get(0));
                 } else {
                     workspace.removeProject(project);
