@@ -21,6 +21,9 @@ package org.wso2.apiManager.plugin.ui;
 import com.eviware.x.form.support.AField;
 import com.eviware.x.form.support.AForm;
 
+/**
+ * This class is used to generate the API selection UI.
+ */
 @AForm(name = "Select API to Import",
         description = "Please select from the list which API specification(s) you want to import to the project.")
 public interface APIModel {

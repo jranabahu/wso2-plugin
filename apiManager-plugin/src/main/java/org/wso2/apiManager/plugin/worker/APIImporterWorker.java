@@ -21,7 +21,6 @@ package org.wso2.apiManager.plugin.worker;
 import com.eviware.soapui.SoapUI;
 import com.eviware.soapui.config.CredentialsConfig;
 import com.eviware.soapui.config.TestStepConfig;
-import com.eviware.soapui.config.impl.TestStepConfigImpl;
 import com.eviware.soapui.impl.rest.OAuth2ProfileContainer;
 import com.eviware.soapui.impl.rest.RestMethod;
 import com.eviware.soapui.impl.rest.RestRequest;
@@ -30,7 +29,6 @@ import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.impl.wsdl.WsdlTestSuite;
 import com.eviware.soapui.impl.wsdl.testcase.WsdlTestCase;
-import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestStep;
 import com.eviware.soapui.impl.wsdl.teststeps.registry.RestRequestStepFactory;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.UISupport;
@@ -48,12 +46,14 @@ import java.util.List;
 
 public class APIImporterWorker implements Worker {
     String errors = "";
+
     private XProgressDialog waitDialog;
     private boolean cancelled = false;
     private List<APIInfo> links;
     private boolean isTestSuiteSelected = false;
     private boolean isLoadTestSelected = false;
     private WsdlProject project;
+
     private List<RestService> addedServices = new ArrayList<RestService>();
 
     private APIImporterWorker(XProgressDialog waitDialog, APISelectionResult apiSelectionResult, WsdlProject project) {

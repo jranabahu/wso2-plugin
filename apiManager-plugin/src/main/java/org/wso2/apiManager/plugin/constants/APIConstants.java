@@ -19,7 +19,7 @@
 package org.wso2.apiManager.plugin.constants;
 
 /**
- * This class contains all the constants used
+ * This class contains all the constants used.
  */
 public final class APIConstants {
     public static final String API_ACTION = "action";

@@ -83,6 +83,7 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
                 }
             });
         }
+
         while (dialog.show()) {
             String urlString = dialog.getValue(ImportModel.API_STORE_URL);
             String userName = dialog.getValue(ImportModel.USER_NAME);

@@ -16,7 +16,6 @@
 * under the License.
 */
 
-
 package org.wso2.apiManager.plugin;
 
 public class ActionGroups {

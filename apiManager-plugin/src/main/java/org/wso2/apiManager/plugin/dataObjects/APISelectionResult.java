@@ -20,6 +20,9 @@ package org.wso2.apiManager.plugin.dataObjects;
 
 import java.util.List;
 
+/**
+ * This class holds the selected API information from the API selection UI.
+ */
 public class APISelectionResult {
     private List<APIInfo> apiInfoList;
     private boolean isTestSuiteSelected;

@@ -63,8 +63,8 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
         final XFormDialog dialog = ADialogBuilder.buildDialog(ProjectModel.class);
 
         /*
-        * The purpose of this listener is to validate the API Store URL and the Project name upon submitting the form
-        * */
+         * The purpose of this listener is to validate the API Store URL and the Project name upon submitting the form
+         */
         dialog.getFormField(ProjectModel.API_STORE_URL).addFormFieldValidator(new XFormFieldValidator() {
             @Override
             public ValidationMessage[] validateField(XFormField formField) {

@@ -19,7 +19,7 @@
 package org.wso2.apiManager.plugin.dataObjects;
 
 /**
- * This class contains the API Information
+ * This class contains the API Information.
  */
 public class APIInfo {
     private String name;

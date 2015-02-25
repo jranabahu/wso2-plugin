@@ -213,7 +213,11 @@ public class Utils {
 
     /**
      * This method will create a set of rest services by reading the swagger definitions resource from the given URL
-     * in APIInfo
+     * in APIInfo.
+     *
+     * @param apiLink The APIInfo object which contains the API details.
+     * @param project The WsdlProject
+     * @return an array of RestService
      */
     public static RestService[] importAPItoProject(APIInfo apiLink, WsdlProject project) {
         SwaggerImporter importer = SwaggerUtils.createSwaggerImporter(apiLink.getSwaggerDocLink(), project);

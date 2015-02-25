@@ -21,7 +21,7 @@ package org.wso2.apiManager.plugin.dataObjects;
 import java.util.List;
 
 /**
- * Class that holds the API Extracted Results
+ * Class that holds the API Extracted Results.
  * This class contains the list of APIs, any error that occur or whether the results have been canceled.
  */
 public class APIExtractionResult {
