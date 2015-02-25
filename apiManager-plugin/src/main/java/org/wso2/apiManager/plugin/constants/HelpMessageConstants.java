@@ -22,12 +22,17 @@ package org.wso2.apiManager.plugin.constants;
  * This class contains all the help/validation messages that are used by the UIs
  */
 public class HelpMessageConstants {
+    // Help messages for the ProjectModel and Import Model
     public static final String API_STORE_URL_VALIDATION_MSG = "Please enter the API Store URL.";
     public static final String USER_NAME_VALIDATION_MSG = "Please enter user name.";
     public static final String PASSWORD_VALIDATION_MSG = "Please enter an valid password.";
     public static final String INVALID_API_STORE_URL = "Invalid API Store URL.";
     public static final String PROJECT_NAME_VALIDATION_MSG = "Please enter project name.";
 
+    // Validation message for the APIModel table
     public static final String API_SELECTION_VALIDATION_MSG = "Please select at least one API to proceed";
 
+    // Tooltip texts for the radio buttons
+    public static final String TEST_SUITE_TOOLTIP_TEXT = "Select 'Yes' if you need to generate a set of test suites for the selected APIs";
+    public static final String LOAD_TEST_TOOLTIP_TEXT = "Select 'Yes' if you need to generate a set of load tests for the selected APIs";
 }

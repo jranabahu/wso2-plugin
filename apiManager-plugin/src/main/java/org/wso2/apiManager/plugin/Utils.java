@@ -50,14 +50,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
-    /*
-    * This method checks whether the given URL is a correct one.
-    * */
+
+    /**
+     * This method checks whether the given URL is a correct one. If the given URL is correct, then it will
+     * return a URL
+     *
+     * @param urlString the url String that need to be validated.
+     * @return URL that is created from the given urlString
+     */
     public static URL validateURL(String urlString) {
+        // check for null or empty
         if (StringUtils.isNullOrEmpty(urlString)) {
             return null;
         }
 
+        // check for a valid protocol
         if (!urlString.toLowerCase().startsWith("http://") && !urlString.toLowerCase().startsWith("https://")) {
             return null;
         }
@@ -71,16 +78,18 @@ public class Utils {
     }
 
     /**
-     * This method is used to create the API section UI from the given list of APIs
+     * This method is used to create the API section UI from the given list of APIs.
      *
-     * @param apis The list of APIs that the table is constructed
+     * @param apis The list of APIs that the table is constructed.
      * @return APISelectionResult which contains all the selected APIs and whether test suites and load
-     * are needed to be generated
+     * are needed to be generated.
      */
     public static APISelectionResult showSelectAPIDefDialog(List<APIInfo> apis) {
         final XFormDialog dialog = ADialogBuilder.buildDialog(APIModel.class);
         final Object[][] tableData = convertToTableData(apis);
 
+        // --------------- start of API List table population section ------------------
+        // We create a table model here with the converted data.
         TableModel tableModel = new AbstractTableModel() {
             Object[][] data = tableData;
             String[] columnNames = {"Name", "Version", "Provider", "Description"};
@@ -109,6 +118,7 @@ public class Utils {
 
         };
 
+        // We get the table that was generated in the form and we set some properties there.
         XFormField apiListFormField = dialog.getFormField(APIModel.API_LIST);
         final JXTable table = ((JTableFormField) apiListFormField).getTable();
         table.setCellSelectionEnabled(false);
@@ -121,6 +131,7 @@ public class Utils {
         table.getParent().setPreferredSize(new Dimension(600, 200));
         table.getParent().getParent().setPreferredSize(new Dimension(600, 200));
 
+        // Setting the table model
         table.setModel(tableModel);
 
         // This is to show a toolTip when hovering over the table cells. We need this because there could be long
@@ -132,27 +143,18 @@ public class Utils {
                 int row = table.rowAtPoint(p);
                 int col = table.columnAtPoint(p);
 
-                table.setToolTipText(tableData[row][col].toString());
-            }
-        });
-
-        XFormRadioGroup testSuiteSelection = (XFormRadioGroup) dialog.getFormField(APIModel.TEST_SUITE);
-        testSuiteSelection.setValue(APIConstants.RADIO_BUTTON_OPTIONS_NO);
-        testSuiteSelection.addFormFieldListener(new XFormFieldListener() {
-            @Override
-            public void valueChanged(XFormField xFormField, String newValue, String oldValue) {
-                XFormRadioGroup loadTestSelection = (XFormRadioGroup) dialog.getFormField(APIModel.LOAD_TEST);
-                if(APIConstants.RADIO_BUTTON_OPTIONS_YES.equals(newValue)){
-                    loadTestSelection.setEnabled(true);
-                }else if(APIConstants.RADIO_BUTTON_OPTIONS_NO.equals(newValue)){
-                    loadTestSelection.setEnabled(false);
+                if(row == -1 || col == -1){
+                    return;
+                }
+                try {
+                    table.setToolTipText(tableData[row][col].toString());
+                } catch (Exception e1) {
+                    // If there are any exceptions, we ignore them since they are not important
                 }
             }
         });
 
-        XFormRadioGroup loadTestSelection = (XFormRadioGroup) dialog.getFormField(APIModel.LOAD_TEST);
-        loadTestSelection.setValue(APIConstants.RADIO_BUTTON_OPTIONS_NO);
-
+        // The purpose of this validator is the check whether there are at least one API selected from the table.
         apiListFormField.addFormFieldValidator(new XFormFieldValidator() {
             @Override
             public ValidationMessage[] validateField(XFormField xFormField) {
@@ -164,7 +166,30 @@ public class Utils {
                 return new ValidationMessage[0];
             }
         });
+        // ------------------- End of API List Table population section ----------------------
 
+        // We get the radio button group and add a listener there. The purpose of the listener is to 'enable',
+        // 'disable' the Load test radio button group based on the selected value of this group.
+        // The reason is that, there is no meaning to create a Load test without a test suite.
+        XFormRadioGroup testSuiteSelection = (XFormRadioGroup) dialog.getFormField(APIModel.TEST_SUITE);
+        testSuiteSelection.setValue(APIConstants.RADIO_BUTTON_OPTIONS_NO);
+        testSuiteSelection.setToolTip(HelpMessageConstants.TEST_SUITE_TOOLTIP_TEXT);
+
+        testSuiteSelection.addFormFieldListener(new XFormFieldListener() {
+            @Override
+            public void valueChanged(XFormField xFormField, String newValue, String oldValue) {
+                XFormRadioGroup loadTestSelection = (XFormRadioGroup) dialog.getFormField(APIModel.LOAD_TEST);
+                if (APIConstants.RADIO_BUTTON_OPTIONS_YES.equals(newValue)) {
+                    loadTestSelection.setEnabled(true);
+                } else if (APIConstants.RADIO_BUTTON_OPTIONS_NO.equals(newValue)) {
+                    loadTestSelection.setEnabled(false);
+                }
+            }
+        });
+
+        XFormRadioGroup loadTestSelection = (XFormRadioGroup) dialog.getFormField(APIModel.LOAD_TEST);
+        loadTestSelection.setToolTip(HelpMessageConstants.LOAD_TEST_TOOLTIP_TEXT);
+        loadTestSelection.setValue(APIConstants.RADIO_BUTTON_OPTIONS_NO);
 
         if (dialog.show()) {
             int[] selected = table.getSelectedRows();
@@ -186,6 +211,10 @@ public class Utils {
 
     }
 
+    /**
+     * This method will create a set of rest services by reading the swagger definitions resource from the given URL
+     * in APIInfo
+     */
     public static RestService[] importAPItoProject(APIInfo apiLink, WsdlProject project) {
         SwaggerImporter importer = SwaggerUtils.createSwaggerImporter(apiLink.getSwaggerDocLink(), project);
         SoapUI.log("Importing Swagger from [" + apiLink.getName() + "]");

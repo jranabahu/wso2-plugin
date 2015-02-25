@@ -111,6 +111,10 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
         }
 
         APISelectionResult selectionResult = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
+        if(selectionResult == null){
+            return;
+        }
+
         List<APIInfo> selectedAPIs = selectionResult.getApiInfoList();
         if (selectedAPIs != null) {
             List<RestService> services = APIImporterWorker.importServices(selectionResult, wsdlProject);
