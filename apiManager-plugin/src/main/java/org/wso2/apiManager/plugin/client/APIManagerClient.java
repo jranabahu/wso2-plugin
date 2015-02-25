@@ -117,9 +117,10 @@ public class APIManagerClient {
                 HttpEntity entity = response.getEntity();
                 String responseString = EntityUtils.toString(entity, APIConstants.UTF_8);
 
-                boolean isError = Boolean.parseBoolean(responseString.split(",")[0].split(":")[1].split("}")[0].trim());
+                String[] errorSection = responseString.split(",");
+                boolean isError = Boolean.parseBoolean(errorSection[0].split(":")[1].split("}")[0].trim());
                 if (isError) {
-                    String errorMsg = responseString.split(",")[1].split(":")[1].split("}")[0].trim();
+                    String errorMsg = errorSection[1].split(":")[1].split("}")[0].trim();
                     throw new Exception("Error occurred while getting the list of APIs " + errorMsg);
                 }
 
@@ -186,9 +187,10 @@ public class APIManagerClient {
             HttpEntity entity = response.getEntity();
             String responseString = EntityUtils.toString(entity, APIConstants.UTF_8);
 
-            boolean isError = Boolean.parseBoolean(responseString.split(",")[0].split(":")[1].split("}")[0].trim());
+            String[] errorSection = responseString.split(",");
+            boolean isError = Boolean.parseBoolean(errorSection[0].split(":")[1].split("}")[0].trim());
             if (isError) {
-                String errorMsg = responseString.split(",")[1].split(":")[1].split("}")[0].trim();
+                String errorMsg = errorSection[1].split(":")[1].split("}")[0].trim();
                 throw new Exception(" Authentication with external APIStore -  failed due to " + errorMsg);
             } else {
                 return true;
@@ -232,6 +234,7 @@ public class APIManagerClient {
      * @return The tenant user name
      */
     private String constructTenantUserName(String userName, String tenantDomain) {
+        String tenantUserName;
         return userName + APIConstants.TENANT_DOMAIN_SEPARATOR + tenantDomain;
     }
 

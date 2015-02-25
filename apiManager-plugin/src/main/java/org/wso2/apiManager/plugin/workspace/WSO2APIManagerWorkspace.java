@@ -34,6 +34,7 @@ import com.eviware.x.form.support.ADialogBuilder;
 import org.wso2.apiManager.plugin.Utils;
 import org.wso2.apiManager.plugin.dataObjects.APIExtractionResult;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
+import org.wso2.apiManager.plugin.dataObjects.APISelectionResult;
 import org.wso2.apiManager.plugin.ui.ProjectModel;
 import org.wso2.apiManager.plugin.worker.APIExtractorWorker;
 import org.wso2.apiManager.plugin.worker.APIImporterWorker;
@@ -98,7 +99,12 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
         });
 
         if (dialog.show() && listExtractionResult != null && !listExtractionResult.isCanceled()) {
-            List<APIInfo> selectedAPIs = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
+            APISelectionResult selectionResult = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
+            if(selectionResult == null){
+                return;
+            }
+
+            List<APIInfo> selectedAPIs = selectionResult.getApiInfoList();
             if (selectedAPIs != null) {
                 WsdlProject project;
                 try {
@@ -110,7 +116,7 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
                             ()));
                     return;
                 }
-                List<RestService> services = APIImporterWorker.importServices(selectedAPIs, project);
+                List<RestService> services = APIImporterWorker.importServices(selectionResult, project);
                 if (services != null && !services.isEmpty()) {
                     UISupport.select(services.get(0));
                 } else {

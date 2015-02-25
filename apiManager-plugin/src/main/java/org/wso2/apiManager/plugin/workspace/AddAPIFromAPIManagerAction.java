@@ -34,6 +34,7 @@ import org.wso2.apiManager.plugin.ActionGroups;
 import org.wso2.apiManager.plugin.Utils;
 import org.wso2.apiManager.plugin.dataObjects.APIExtractionResult;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
+import org.wso2.apiManager.plugin.dataObjects.APISelectionResult;
 import org.wso2.apiManager.plugin.ui.ImportModel;
 import org.wso2.apiManager.plugin.worker.APIExtractorWorker;
 import org.wso2.apiManager.plugin.worker.APIImporterWorker;
@@ -109,10 +110,11 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
             return;
         }
 
-        List<APIInfo> selectedAPIs = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
+        APISelectionResult selectionResult = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
+        List<APIInfo> selectedAPIs = selectionResult.getApiInfoList();
         if (selectedAPIs != null) {
-            List<RestService> services = APIImporterWorker.importServices(selectedAPIs, wsdlProject);
-            if (services != null && services.size() != 0) {
+            List<RestService> services = APIImporterWorker.importServices(selectionResult, wsdlProject);
+            if (services != null && !services.isEmpty()) {
                 UISupport.select(services.get(0));
             }
         }

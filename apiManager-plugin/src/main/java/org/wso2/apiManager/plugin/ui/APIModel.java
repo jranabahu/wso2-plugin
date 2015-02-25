@@ -24,9 +24,14 @@ import com.eviware.x.form.support.AForm;
 @AForm(name = "Select API to Import",
         description = "Please select from the list which API specification(s) you want to import to the project.")
 public interface APIModel {
-    @AField(description = "", type = AField.AFieldType.COMPONENT)
-    public static final String API_INFO = "";
+    @AField(description = "", type = AField.AFieldType.TABLE)
+    public static final String API_LIST = "Api List";
 
-    @AField(description = "Generate test suite", type = AField.AFieldType.COMBOBOX)
-    public static final String TEST_SUITE = "TEST_SUITE";
+    @AField(description = "Generate test suite", type = AField.AFieldType.RADIOGROUP, values = {"Yes","No"},
+            defaultValue = "No")
+    public static final String TEST_SUITE = "Generate Test Suite";
+
+    @AField(description = "Generate load test", type = AField.AFieldType.RADIOGROUP, values = {"Yes","No"},
+            defaultValue = "No", enabled = false)
+    public static final String LOAD_TEST = "Generate Load test";
 }

@@ -28,4 +28,6 @@ public class HelpMessageConstants {
     public static final String INVALID_API_STORE_URL = "Invalid API Store URL.";
     public static final String PROJECT_NAME_VALIDATION_MSG = "Please enter project name.";
 
+    public static final String API_SELECTION_VALIDATION_MSG = "Please select at least one API to proceed";
+
 }

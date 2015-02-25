@@ -57,8 +57,9 @@ public class APIExtractorWorker implements Worker {
         try {
             worker.waitDialog.run(worker);
         } catch (Exception e) {
-            SoapUI.logError(e);
+            worker.waitDialog.setVisible(false);
             worker.result.setError(e.getMessage());
+            SoapUI.logError(e);
         }
         return worker.result;
     }

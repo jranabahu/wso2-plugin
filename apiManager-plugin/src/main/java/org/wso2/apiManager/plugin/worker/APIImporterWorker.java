@@ -20,12 +20,18 @@ package org.wso2.apiManager.plugin.worker;
 
 import com.eviware.soapui.SoapUI;
 import com.eviware.soapui.config.CredentialsConfig;
+import com.eviware.soapui.config.TestStepConfig;
+import com.eviware.soapui.config.impl.TestStepConfigImpl;
 import com.eviware.soapui.impl.rest.OAuth2ProfileContainer;
 import com.eviware.soapui.impl.rest.RestMethod;
 import com.eviware.soapui.impl.rest.RestRequest;
 import com.eviware.soapui.impl.rest.RestResource;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
+import com.eviware.soapui.impl.wsdl.WsdlTestSuite;
+import com.eviware.soapui.impl.wsdl.testcase.WsdlTestCase;
+import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestStep;
+import com.eviware.soapui.impl.wsdl.teststeps.registry.RestRequestStepFactory;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.UISupport;
 import com.eviware.x.dialogs.Worker;
@@ -34,6 +40,7 @@ import com.eviware.x.dialogs.XProgressMonitor;
 import org.wso2.apiManager.plugin.Utils;
 import org.wso2.apiManager.plugin.constants.APIConstants;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
+import org.wso2.apiManager.plugin.dataObjects.APISelectionResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,20 +51,23 @@ public class APIImporterWorker implements Worker {
     private XProgressDialog waitDialog;
     private boolean cancelled = false;
     private List<APIInfo> links;
+    private boolean isTestSuiteSelected = false;
+    private boolean isLoadTestSelected = false;
     private WsdlProject project;
     private List<RestService> addedServices = new ArrayList<RestService>();
 
-    private APIImporterWorker(XProgressDialog waitDialog, List<APIInfo> links, WsdlProject project) {
+    private APIImporterWorker(XProgressDialog waitDialog, APISelectionResult apiSelectionResult, WsdlProject project) {
         this.waitDialog = waitDialog;
-        this.links = links;
+        this.links = apiSelectionResult.getApiInfoList();
+        this.isLoadTestSelected = apiSelectionResult.isLoadTestSelected();
+        this.isTestSuiteSelected = apiSelectionResult.isTestSuiteSelected();
         this.project = project;
     }
 
-    public static List<RestService> importServices(List<APIInfo> links, WsdlProject project) {
-        APIImporterWorker worker = new APIImporterWorker(UISupport.getDialogs().createProgressDialog("Importing APIs." +
-                                                                                                     "..", 100, "",
-                                                                                                     true), links,
-                                                         project);
+    public static List<RestService> importServices(APISelectionResult selectionResult, WsdlProject project) {
+        APIImporterWorker worker = new APIImporterWorker(
+                UISupport.getDialogs().createProgressDialog("Importing APIs...", 100, "",true),
+                selectionResult, project);
         try {
             worker.waitDialog.run(worker);
         } catch (Exception e) {
@@ -77,35 +87,64 @@ public class APIImporterWorker implements Worker {
             if (cancelled) {
                 break;
             }
-            RestService[] service;
+            RestService[] restServices;
             try {
-                service = Utils.importAPItoProject(apiInfo, project);
+                restServices = Utils.importAPItoProject(apiInfo, project);
 
                 OAuth2ProfileContainer profileContainer = project.getOAuth2ProfileContainer();
                 if (profileContainer.getProfileByName(APIConstants.WSO2_API_MANAGER_DEFAULT) == null) {
                     profileContainer.addNewOAuth2Profile(APIConstants.WSO2_API_MANAGER_DEFAULT);
                 }
 
-                if (service != null) {
-                    for (RestService restService : service) {
+                WsdlTestSuite testSuite = null;
+                WsdlTestCase testCase = null;
+
+                if (restServices != null) {
+                    for (RestService restService : restServices) {
+                        // We change the restServices name to the apiName/apiVersion
+                        restService.setName(constructServiceName(apiInfo, restService.getName()));
+
+                        if(isTestSuiteSelected){
+                            //Check to see if the default test suite is there
+                            testSuite = project.getTestSuiteByName(restService.getName());
+                            if(testSuite == null) {
+                                testSuite = project.addNewTestSuite(restService.getName());
+                            }
+                        }
                         List<RestResource> resources = restService.getAllResources();
                         for (RestResource resource : resources) {
+
+                            // Add a test case for the newly created one
+                            if(isTestSuiteSelected){
+                                if (testSuite != null) {
+                                    testCase = testSuite.addNewTestCase(resource.getName());
+                                }
+                            }
                             List<RestMethod> methods = resource.getRestMethodList();
                             for (RestMethod method : methods) {
                                 List<RestRequest> restRequests = method.getRequestList();
                                 for (RestRequest restRequest : restRequests) {
-                                    restRequest.setSelectedAuthProfileAndAuthType(APIConstants
-                                                                                          .WSO2_API_MANAGER_DEFAULT,
-                                                                                  CredentialsConfig.AuthType
-                                                                                          .O_AUTH_2_0);
+                                    restRequest.setSelectedAuthProfileAndAuthType(
+                                            APIConstants.WSO2_API_MANAGER_DEFAULT,
+                                            CredentialsConfig.AuthType.O_AUTH_2_0);
                                     // This will rename the request name to something similar to
                                     // get_repos/{user_name}/{repo_name} - default_request
                                     restRequest.setName(constructRequestName(method.getName()));
+
+                                    // Add a test step for each request
+                                    if(isTestSuiteSelected && testCase != null){
+                                        TestStepConfig testStepConfig = RestRequestStepFactory.createConfig
+                                                (restRequest, restRequest.getName());
+                                        testCase.addTestStep(testStepConfig);
+                                    }
+                                }
+                            }
+                            if(isLoadTestSelected){
+                                if (testCase != null) {
+                                    testCase.addNewLoadTest(testCase.getName());
                                 }
                             }
                         }
-                        // We change the service name to the apiName/apiVersion
-                        restService.setName(constructServiceName(apiInfo, restService.getName()));
                     }
                 }
             } catch (Throwable e) {
@@ -118,8 +157,8 @@ public class APIImporterWorker implements Worker {
                 SoapUI.logError(e);
                 continue;
             }
-            if (service != null) {
-                addedServices.addAll(Arrays.asList(service));
+            if (restServices != null) {
+                addedServices.addAll(Arrays.asList(restServices));
             }
         }
 

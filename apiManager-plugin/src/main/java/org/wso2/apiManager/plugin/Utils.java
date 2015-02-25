@@ -22,17 +22,28 @@ import com.eviware.soapui.SoapUI;
 import com.eviware.soapui.impl.rest.RestService;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.support.StringUtils;
+import com.eviware.x.form.ValidationMessage;
 import com.eviware.x.form.XFormDialog;
+import com.eviware.x.form.XFormField;
+import com.eviware.x.form.XFormFieldListener;
+import com.eviware.x.form.XFormFieldValidator;
 import com.eviware.x.form.support.ADialogBuilder;
+import com.eviware.x.form.support.XFormRadioGroup;
+import com.eviware.x.impl.swing.JTableFormField;
 import com.smartbear.swagger.SwaggerImporter;
 import com.smartbear.swagger.SwaggerUtils;
+import org.jdesktop.swingx.JXTable;
+import org.wso2.apiManager.plugin.constants.APIConstants;
+import org.wso2.apiManager.plugin.constants.HelpMessageConstants;
 import org.wso2.apiManager.plugin.dataObjects.APIInfo;
+import org.wso2.apiManager.plugin.dataObjects.APISelectionResult;
 import org.wso2.apiManager.plugin.ui.APIModel;
 
-import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -59,11 +70,19 @@ public class Utils {
         }
     }
 
-    public static List<APIInfo> showSelectAPIDefDialog(final List<APIInfo> apis) {
+    /**
+     * This method is used to create the API section UI from the given list of APIs
+     *
+     * @param apis The list of APIs that the table is constructed
+     * @return APISelectionResult which contains all the selected APIs and whether test suites and load
+     * are needed to be generated
+     */
+    public static APISelectionResult showSelectAPIDefDialog(List<APIInfo> apis) {
         final XFormDialog dialog = ADialogBuilder.buildDialog(APIModel.class);
+        final Object[][] tableData = convertToTableData(apis);
 
         TableModel tableModel = new AbstractTableModel() {
-            Object[][] data = convertToTableData(apis);
+            Object[][] data = tableData;
             String[] columnNames = {"Name", "Version", "Provider", "Description"};
 
             @Override
@@ -82,33 +101,85 @@ public class Utils {
                 return data[rowIndex][columnIndex];
             }
 
-
             @Override
             public String getColumnName(int column) {
                 return columnNames[column];
             }
+
+
         };
 
-        JTable apiTable = new JTable(tableModel);
-        apiTable.setCellSelectionEnabled(false);
-        apiTable.setColumnSelectionAllowed(false);
-        apiTable.setRowSelectionAllowed(true);
-        apiTable.setFillsViewportHeight(true);
-        apiTable.setPreferredScrollableViewportSize(new Dimension(600, 200));
+        XFormField apiListFormField = dialog.getFormField(APIModel.API_LIST);
+        final JXTable table = ((JTableFormField) apiListFormField).getTable();
+        table.setCellSelectionEnabled(false);
+        table.setColumnSelectionAllowed(false);
+        table.setRowSelectionAllowed(true);
+        table.setFillsViewportHeight(true);
 
-        JScrollPane scrollPane = new JScrollPane(apiTable);
-        scrollPane.setPreferredSize(new Dimension(600, 200));
+        // We set the preferred size of all the parent forms until we get to the JScrollPane
+        table.setPreferredScrollableViewportSize(new Dimension(600, 200));
+        table.getParent().setPreferredSize(new Dimension(600, 200));
+        table.getParent().getParent().setPreferredSize(new Dimension(600, 200));
 
-        dialog.setFormFieldProperty("component", scrollPane);
-        dialog.setFormFieldProperty("preferredSize", new Dimension(600, 200));
+        table.setModel(tableModel);
+
+        // This is to show a toolTip when hovering over the table cells. We need this because there could be long
+        // descriptions and api names.
+        table.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                Point p = e.getPoint();
+                int row = table.rowAtPoint(p);
+                int col = table.columnAtPoint(p);
+
+                table.setToolTipText(tableData[row][col].toString());
+            }
+        });
+
+        XFormRadioGroup testSuiteSelection = (XFormRadioGroup) dialog.getFormField(APIModel.TEST_SUITE);
+        testSuiteSelection.setValue(APIConstants.RADIO_BUTTON_OPTIONS_NO);
+        testSuiteSelection.addFormFieldListener(new XFormFieldListener() {
+            @Override
+            public void valueChanged(XFormField xFormField, String newValue, String oldValue) {
+                XFormRadioGroup loadTestSelection = (XFormRadioGroup) dialog.getFormField(APIModel.LOAD_TEST);
+                if(APIConstants.RADIO_BUTTON_OPTIONS_YES.equals(newValue)){
+                    loadTestSelection.setEnabled(true);
+                }else if(APIConstants.RADIO_BUTTON_OPTIONS_NO.equals(newValue)){
+                    loadTestSelection.setEnabled(false);
+                }
+            }
+        });
+
+        XFormRadioGroup loadTestSelection = (XFormRadioGroup) dialog.getFormField(APIModel.LOAD_TEST);
+        loadTestSelection.setValue(APIConstants.RADIO_BUTTON_OPTIONS_NO);
+
+        apiListFormField.addFormFieldValidator(new XFormFieldValidator() {
+            @Override
+            public ValidationMessage[] validateField(XFormField xFormField) {
+                if(table.getSelectedRowCount() <= 0){
+                    return new ValidationMessage[]{new ValidationMessage(
+                            HelpMessageConstants.API_SELECTION_VALIDATION_MSG,
+                            dialog.getFormField(APIModel.API_LIST))};
+                }
+                return new ValidationMessage[0];
+            }
+        });
+
 
         if (dialog.show()) {
-            int[] selected = apiTable.getSelectedRows();
+            int[] selected = table.getSelectedRows();
             ArrayList<APIInfo> selectedAPIs = new ArrayList<APIInfo>();
             for (int no : selected) {
                 selectedAPIs.add(apis.get(no));
             }
-            return selectedAPIs;
+            APISelectionResult selectionResult = new APISelectionResult();
+            selectionResult.setApiInfoList(selectedAPIs);
+            selectionResult.setTestSuiteSelected(
+                    APIConstants.RADIO_BUTTON_OPTIONS_YES.equals(testSuiteSelection.getValue()));
+            selectionResult.setLoadTestSelected(
+                    APIConstants.RADIO_BUTTON_OPTIONS_YES.equals(loadTestSelection.getValue()));
+
+            return selectionResult;
         } else {
             return null;
         }

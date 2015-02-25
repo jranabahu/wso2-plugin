@@ -34,4 +34,7 @@ public final class APIConstants {
     public static final String CARBON_SUPER = "carbon.super";
     public static final String TENANT_DOMAIN_SEPARATOR = "@";
     public static final String WSO2_API_MANAGER_DEFAULT = "wso2-api-manager-default";
+
+    public static final String RADIO_BUTTON_OPTIONS_YES = "Yes";
+    public static final String RADIO_BUTTON_OPTIONS_NO = "No";
 }
