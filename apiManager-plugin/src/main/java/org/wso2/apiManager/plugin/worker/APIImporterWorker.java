@@ -19,13 +19,10 @@
 package org.wso2.apiManager.plugin.worker;
 
 import com.eviware.soapui.SoapUI;
-import com.eviware.soapui.config.CredentialsConfig;
 import com.eviware.soapui.config.TestStepConfig;
 import com.eviware.soapui.impl.AuthRepository.AuthEntries;
 import com.eviware.soapui.impl.AuthRepository.AuthRepository;
 import com.eviware.soapui.impl.AuthRepository.Impl.AuthRepositoryImpl;
-import com.eviware.soapui.impl.rest.OAuth2Profile;
-import com.eviware.soapui.impl.rest.OAuth2ProfileContainer;
 import com.eviware.soapui.impl.rest.RestMethod;
 import com.eviware.soapui.impl.rest.RestRequest;
 import com.eviware.soapui.impl.rest.RestResource;
