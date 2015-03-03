@@ -220,6 +220,7 @@ public class Utils {
      * @return an array of RestService
      */
     public static RestService[] importAPItoProject(APIInfo apiLink, WsdlProject project) {
+        PluginConfig.disableSslSecurity();
         SwaggerImporter importer = SwaggerUtils.createSwaggerImporter(apiLink.getSwaggerDocLink(), project);
         SoapUI.log("Importing Swagger from [" + apiLink.getName() + "]");
         return importer.importSwagger(apiLink.getSwaggerDocLink());

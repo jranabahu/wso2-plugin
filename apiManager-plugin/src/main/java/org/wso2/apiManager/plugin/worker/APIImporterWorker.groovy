@@ -18,7 +18,8 @@
 
 package org.wso2.apiManager.plugin.worker;
 
-import com.eviware.soapui.SoapUI;
+import com.eviware.soapui.SoapUI
+import com.eviware.soapui.config.CredentialsConfig;
 import com.eviware.soapui.config.TestStepConfig;
 import com.eviware.soapui.impl.AuthRepository.AuthEntries;
 import com.eviware.soapui.impl.AuthRepository.AuthRepository;
@@ -92,27 +93,30 @@ public class APIImporterWorker implements Worker {
             try {
                 restServices = Utils.importAPItoProject(apiInfo, project);
 
-                AuthRepository authRepository = project.getAuthRepository();
-                if(authRepository instanceof AuthRepositoryImpl){
-                    boolean hasDefaultProfile = false;
-                    AuthRepositoryImpl authRepositoryImpl = (AuthRepositoryImpl) authRepository;
-                    List<AuthEntries.OAuth20AuthEntry> oAuth2ProfileList = authRepositoryImpl.getOAuth2ProfileList();
-                    for (AuthEntries.OAuth20AuthEntry oAuth20AuthEntry : oAuth2ProfileList) {
-                        if(APIConstants.WSO2_API_MANAGER_DEFAULT.equals(oAuth20AuthEntry.getName())){
-                            hasDefaultProfile = true;
-                            break;
+                if( project.metaClass.hasProperty(project, 'authRepository')){
+                    def authRepository = project.authRepository
+                    if(authRepository instanceof AuthRepositoryImpl){
+                        boolean hasDefaultProfile = false;
+                        AuthRepositoryImpl authRepositoryImpl = (AuthRepositoryImpl) authRepository;
+                        List<AuthEntries.OAuth20AuthEntry> oAuth2ProfileList = authRepositoryImpl.getOAuth2ProfileList();
+                        for (AuthEntries.OAuth20AuthEntry oAuth20AuthEntry : oAuth2ProfileList) {
+                            if(APIConstants.WSO2_API_MANAGER_DEFAULT.equals(oAuth20AuthEntry.getName())){
+                                hasDefaultProfile = true;
+                                break;
+                            }
+                        }
+                        if(!hasDefaultProfile){
+                            authRepositoryImpl.addNewOAuth2Profile(APIConstants.WSO2_API_MANAGER_DEFAULT);
                         }
                     }
-                    if(!hasDefaultProfile){
-                        authRepositoryImpl.addNewOAuth2Profile(APIConstants.WSO2_API_MANAGER_DEFAULT);
+                }
+                else if( project.metaClass.hasProperty(project, 'oAuth2ProfileContainer')) {
+                    // This is the older code that was in use
+                    def profileContainer = project.oAuth2ProfileContainer
+                    if (profileContainer != null && profileContainer.getProfileByName(APIConstants.WSO2_API_MANAGER_DEFAULT) == null) {
+                        profileContainer.addNewOAuth2Profile(APIConstants.WSO2_API_MANAGER_DEFAULT);
                     }
                 }
-
-                // This is the older code that was in use
-//                OAuth2ProfileContainer profileContainer = project.getA;
-//                if (profileContainer.getProfileByName(APIConstants.WSO2_API_MANAGER_DEFAULT) == null) {
-//                    profileContainer.addNewOAuth2Profile(APIConstants.WSO2_API_MANAGER_DEFAULT);
-//                }
 
                 WsdlTestSuite testSuite = null;
                 WsdlTestCase testCase = null;
@@ -143,15 +147,22 @@ public class APIImporterWorker implements Worker {
                                 List<RestRequest> restRequests = method.getRequestList();
                                 for (RestRequest restRequest : restRequests) {
                                     // Selecting the Auth profile
-                                    restRequest.setSelectedAuthProfile(APIConstants.WSO2_API_MANAGER_DEFAULT);
+
+                                    if( restRequest.metaClass.respondsTo( restRequest, "setSelectedAuthProfileAndAuthType")){
+                                        restRequest.setSelectedAuthProfileAndAuthType( APIConstants.WSO2_API_MANAGER_DEFAULT,
+                                                CredentialsConfig.AuthType.O_AUTH_2_0);
+                                    }
+                                    else {
+                                        restRequest.selectedAuthProfile = APIConstants.WSO2_API_MANAGER_DEFAULT;
+                                    }
+
                                     // This will rename the request name to something similar to
                                     // get_repos/{user_name}/{repo_name} - default_request
                                     restRequest.setName(constructRequestName(method.getName()));
 
                                     // Add a test step for each request
                                     if(isTestSuiteSelected && testCase != null){
-                                        TestStepConfig testStepConfig = RestRequestStepFactory.createConfig
-                                                (restRequest, restRequest.getName());
+                                        TestStepConfig testStepConfig = RestRequestStepFactory.createConfig(restRequest, restRequest.getName());
                                         testCase.addTestStep(testStepConfig);
                                     }
                                 }
