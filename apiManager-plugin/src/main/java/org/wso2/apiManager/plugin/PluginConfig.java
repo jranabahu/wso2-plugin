@@ -40,14 +40,10 @@ public class PluginConfig extends PluginAdapter {
 
     @Override
     public void initialize() {
-
+        disableSslSecurity();
     }
 
     public static void disableSslSecurity() {
-
-        if( disabled )
-            return;
-
         // Create a trust manager that does not validate certificate chains
         final TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
@@ -74,12 +70,13 @@ public class PluginConfig extends PluginAdapter {
 
         // Install the all-trusting trust manager
         try {
-            SSLContext sc = SSLContext.getInstance("SSL");
+            SSLContext sc = SSLContext.getInstance("TLS");
             sc.init(null, trustAllCerts, new java.security.SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
             HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
             SoapUI.log.info("SSL Workaround Plugin initialized");
-            disabled = true;
+            SoapUI.log.info("Thread name : " + Thread.currentThread().getName() + ". Thread id : " + Thread
+                    .currentThread().getId());
         } catch (GeneralSecurityException e) {
             SoapUI.logError(e, "SSL Workaround Plugin initialization error");
         }

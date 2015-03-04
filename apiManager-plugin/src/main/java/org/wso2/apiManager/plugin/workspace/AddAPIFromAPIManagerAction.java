@@ -123,7 +123,5 @@ public class AddAPIFromAPIManagerAction extends AbstractSoapUIAction<WsdlProject
                 UISupport.select(services.get(0));
             }
         }
-
-
     }
 }
