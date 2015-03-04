@@ -52,6 +52,8 @@ import static org.wso2.apiManager.plugin.constants.HelpMessageConstants.USER_NAM
  */
 @PluginImportMethod(label = "Import from WSO2 API Manager")
 public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl> {
+    private APIExtractionResult listExtractionResult = null;
+
     public WSO2APIManagerWorkspace() {
         super("Create Project from WSO2 API Manager", "Creates new project from API specifications on the API Store");
     }
@@ -86,67 +88,17 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
                 if (storeUrl == null) {
                     return new ValidationMessage[]{new ValidationMessage(INVALID_API_STORE_URL, formField)};
                 }
+                listExtractionResult = APIExtractorWorker.downloadAPIList(storeUrl.toString(), dialog.getValue
+                        (ProjectModel.USER_NAME), dialog.getValue(ProjectModel.PASSWORD).toCharArray(), dialog
+                                                                                  .getValue(ProjectModel.TENANT_DOMAIN));
+                if (StringUtils.hasContent(listExtractionResult.getError())) {
+                    return new ValidationMessage[]{new ValidationMessage(listExtractionResult.getError(), formField)};
+                }
                 return new ValidationMessage[0];
             }
         });
 
-        APIExtractionResult listExtractionResult = null;
-        while (dialog.show()) {
-            String urlString = dialog.getValue(ProjectModel.API_STORE_URL);
-            String userName = dialog.getValue(ProjectModel.USER_NAME);
-            char[] password = dialog.getValue(ProjectModel.PASSWORD).toCharArray();
-            String tenantDomain = dialog.getValue(ProjectModel.TENANT_DOMAIN);
-            if (urlString == null) {
-                return;
-            }
-            URL url = Utils.validateURL(urlString);
-            if (url == null) {
-                UISupport.showErrorMessage(INVALID_API_STORE_URL);
-                continue;
-            }
-            listExtractionResult = APIExtractorWorker.downloadAPIList(url.toString(), userName, password, tenantDomain);
-            if (listExtractionResult.isCanceled()) {
-                return;
-            }
-
-            if (listExtractionResult.getApiList() != null) {
-                break;
-            }
-            UISupport.showErrorMessage(listExtractionResult.getError());
-        }
-        if (listExtractionResult == null) {
-            return;
-        }
-
-        APISelectionResult selectionResult = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
-        if(selectionResult == null){
-            return;
-        }
-
-        List<APIInfo> selectedAPIs = selectionResult.getApiInfoList();
-        if (selectedAPIs != null) {
-            WsdlProject project;
-            try {
-                project = workspace.createProject(dialog.getValue(ProjectModel.PROJECT_NAME), null);
-            } catch (Exception e) {
-                SoapUI.logError(e);
-                UISupport.showErrorMessage(String.format("Unable to create Project because of %s exception with "
-                                                         + "\"%s\" message", e.getClass().getName(), e.getMessage
-                        ()));
-                return;
-            }
-            List<RestService> services = APIImporterWorker.importServices(selectionResult, project);
-            if (services != null && !services.isEmpty()) {
-                UISupport.select(services.get(0));
-            } else {
-                workspace.removeProject(project);
-            }
-        }
-/*
-        if (dialog.show()) {
-            listExtractionResult = APIExtractorWorker.downloadAPIList(dialog.getValue(ProjectModel.API_STORE_URL), dialog
-                    .getValue(ProjectModel.USER_NAME), dialog.getValue(ProjectModel.PASSWORD).toCharArray(), dialog
-                                                                              .getValue(ProjectModel.TENANT_DOMAIN));
+        if (dialog.show() && listExtractionResult != null && !listExtractionResult.isCanceled()) {
             APISelectionResult selectionResult = Utils.showSelectAPIDefDialog(listExtractionResult.getApiList());
             if(selectionResult == null){
                 return;
@@ -172,7 +124,6 @@ public class WSO2APIManagerWorkspace extends AbstractSoapUIAction<WorkspaceImpl>
                 }
             }
         }
-*/
     }
 
 
